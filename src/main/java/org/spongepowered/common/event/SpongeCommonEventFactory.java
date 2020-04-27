@@ -62,6 +62,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.IInteractionObject;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.chunk.Chunk;
 import org.apache.logging.log4j.Level;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
@@ -157,6 +158,7 @@ import org.spongepowered.common.bridge.world.WorldBridge;
 import org.spongepowered.common.bridge.world.WorldServerBridge;
 import org.spongepowered.common.bridge.world.chunk.ActiveChunkReferantBridge;
 import org.spongepowered.common.bridge.world.chunk.ChunkBridge;
+import org.spongepowered.common.bridge.world.chunk.ChunkProviderServerBridge;
 import org.spongepowered.common.entity.EntityUtil;
 import org.spongepowered.common.entity.PlayerTracker;
 import org.spongepowered.common.event.inventory.UpdateAnvilEventCost;
@@ -188,6 +190,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -612,20 +615,45 @@ public class SpongeCommonEventFactory {
     public static ChangeBlockEvent.Break callChangeBlockEventModifyLiquidBreak(
         final net.minecraft.world.World worldIn, final BlockPos pos, final IBlockState fromState, final IBlockState toState) {
         final PhaseContext<?> context = PhaseTracker.getInstance().getCurrentContext();
-        Object source =context.getSource(LocatableBlock.class).orElse(null);
+        Object source = context.getSource(LocatableBlock.class).orElse(null);
         if (source == null) {
             source = worldIn; // Fallback
         }
+        // Someone -> Liquid Break
         try (final CauseStackManager.StackFrame frame = Sponge.getCauseStackManager().pushCauseFrame()) {
+            final User creator = context.getOwner().orElse(null);
+            if (creator != null) {
+                frame.pushCause(creator);
+            }
             frame.pushCause(source);
-            frame.addContext(EventContextKeys.LIQUID_BREAK, (World) worldIn);
+            final World world = (World) worldIn;
+            frame.addContext(EventContextKeys.LIQUID_BREAK, world);
 
-            final WorldProperties world = ((World) worldIn).getProperties();
+            final WorldProperties properties = world.getProperties();
             final Vector3i position = new Vector3i(pos.getX(), pos.getY(), pos.getZ());
 
-            final SpongeBlockSnapshot from = SpongeBlockSnapshotBuilder.pooled().blockState(fromState).world(world).position(position).build();
-            final SpongeBlockSnapshot to = SpongeBlockSnapshotBuilder.pooled().blockState(toState).world(world).position(position).build();
-            final Transaction<BlockSnapshot> transaction = new Transaction<>(from, to);
+            final SpongeBlockSnapshotBuilder fromBuilder =
+                SpongeBlockSnapshotBuilder.pooled().blockState(fromState).world(properties).position(position);
+
+            final Chunk chunk = worldIn.getChunk(pos.getX() >> 4, pos.getZ() >> 4);
+            if (chunk != null) {
+                final UUID owner = ((ChunkBridge) chunk).bridge$getBlockOwnerUUID(pos).orElse(null);
+                final UUID notifier = ((ChunkBridge) chunk).bridge$getBlockNotifierUUID(pos).orElse(null);
+                fromBuilder
+                    .creator(owner)
+                    .notifier(notifier);
+            }
+            final SpongeBlockSnapshotBuilder toBuilder = SpongeBlockSnapshotBuilder.pooled().blockState(toState).world(properties).position(position);
+            if (creator != null) {
+                toBuilder.creator(creator.getUniqueId());
+            }
+
+            final User notifier = context.getNotifier().orElse(null);
+            if (notifier != null) {
+                toBuilder.notifier(notifier.getUniqueId());
+            }
+            
+            final Transaction<BlockSnapshot> transaction = new Transaction<>(fromBuilder.build(), toBuilder.build());
             final ChangeBlockEvent.Break event = SpongeEventFactory.createChangeBlockEventBreak(frame.getCurrentCause(),
                 Collections.singletonList(transaction));
 
