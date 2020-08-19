@@ -26,22 +26,25 @@ package org.spongepowered.vanilla.launch;
 
 import com.google.inject.Stage;
 import net.minecraft.client.main.Main;
+import net.minecraft.server.MinecraftServer;
 import org.spongepowered.common.SpongeBootstrap;
 import org.spongepowered.common.launch.Launcher;
+import org.spongepowered.plugin.PluginEnvironment;
+import org.spongepowered.vanilla.launch.plugin.VanillaPluginLoader;
 
 import java.nio.file.Path;
 import java.util.List;
 
 public final class ClientLauncher extends VanillaLauncher {
 
-    protected ClientLauncher(final Stage injectionStage) {
-        super(injectionStage);
+    protected ClientLauncher(final VanillaPluginLoader pluginLoader, final Stage injectionStage) {
+        super(pluginLoader, injectionStage);
     }
 
-    public static void launch(final String pluginSpiVersion, final Path baseDirectory, final List<Path> pluginDirectories, final Boolean isDeveloperEnvironment, final String[] args) {
-        final ClientLauncher launcher = new ClientLauncher(isDeveloperEnvironment ? Stage.DEVELOPMENT : Stage.PRODUCTION);
+    public static void launch(final VanillaPluginLoader pluginLoader, final Boolean isDeveloperEnvironment, final String[] args) {
+        final ClientLauncher launcher = new ClientLauncher(pluginLoader, isDeveloperEnvironment ? Stage.DEVELOPMENT : Stage.PRODUCTION);
         Launcher.setInstance(launcher);
-        launcher.onLaunch(pluginSpiVersion, baseDirectory, pluginDirectories, args);
+        launcher.launchPlatform(args);
     }
 
     @Override
@@ -49,9 +52,8 @@ public final class ClientLauncher extends VanillaLauncher {
         return false;
     }
 
-    @Override
-    public void onLaunch(final String pluginSpiVersion, final Path baseDirectory, final List<Path> pluginDirectories, final String[] args) {
-        super.onLaunch(pluginSpiVersion, baseDirectory, pluginDirectories, args);
+    public void launchPlatform(final String[] args) {
+        super.onLaunch();
         this.getLogger().info("Loading Sponge, please wait...");
 
         SpongeBootstrap.perform("Client", () -> Main.main(args));

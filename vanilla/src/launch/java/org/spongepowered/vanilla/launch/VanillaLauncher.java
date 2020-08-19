@@ -30,7 +30,7 @@ import org.spongepowered.common.launch.plugin.DummyPluginContainer;
 import org.spongepowered.plugin.PluginContainer;
 import org.spongepowered.plugin.metadata.PluginMetadata;
 import org.spongepowered.plugin.metadata.util.PluginMetadataHelper;
-import org.spongepowered.vanilla.launch.plugin.PluginLoader;
+import org.spongepowered.vanilla.launch.plugin.VanillaPluginLoader;
 import org.spongepowered.vanilla.launch.plugin.VanillaPluginManager;
 
 import java.io.IOException;
@@ -42,8 +42,8 @@ public abstract class VanillaLauncher extends Launcher {
     private final Stage injectionStage;
     private PluginContainer vanillaPlugin;
 
-    protected VanillaLauncher(Stage injectionStage) {
-        super(new VanillaPluginManager());
+    protected VanillaLauncher(final VanillaPluginLoader pluginLoader, final Stage injectionStage) {
+        super(pluginLoader, new VanillaPluginManager());
         this.injectionStage = injectionStage;
     }
 
@@ -59,12 +59,11 @@ public abstract class VanillaLauncher extends Launcher {
 
     @Override
     public final void loadPlugins() {
-        final PluginLoader pluginLoader = new PluginLoader(this.getPluginEnvironment(), this.getPluginManager());
-        pluginLoader.discoverLanguageServices();
-        pluginLoader.initialize();
-        pluginLoader.discoverPluginResources();
+        final VanillaPluginLoader pluginLoader = this.getPluginLoader();
         pluginLoader.createPluginCandidates();
-        pluginLoader.createPlugins();
+        for (final PluginContainer plugin : pluginLoader.createPlugins()) {
+            this.getPluginManager().addPlugin(plugin);
+        }
     }
 
     @Override
@@ -90,5 +89,14 @@ public abstract class VanillaLauncher extends Launcher {
         } catch (IOException e) {
             throw new RuntimeException("Could not load metadata information for the implementation! This should be impossible!");
         }
+    }
+
+    @Override
+    public VanillaPluginLoader getPluginLoader() {
+        return (VanillaPluginLoader) this.pluginLoader;
+    }
+
+    public VanillaPluginManager getPluginManager() {
+        return (VanillaPluginManager) this.pluginManager;
     }
 }

@@ -31,10 +31,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.common.launch.plugin.DummyPluginContainer;
+import org.spongepowered.common.launch.plugin.PluginLoader;
 import org.spongepowered.common.launch.plugin.SpongePluginManager;
-import org.spongepowered.plugin.Blackboard;
 import org.spongepowered.plugin.PluginContainer;
-import org.spongepowered.plugin.PluginEnvironment;
 import org.spongepowered.plugin.PluginKeys;
 import org.spongepowered.plugin.metadata.PluginMetadata;
 import org.spongepowered.plugin.metadata.util.PluginMetadataHelper;
@@ -50,14 +49,14 @@ public abstract class Launcher {
     private static Launcher INSTANCE;
 
     private final Logger logger;
-    private final PluginEnvironment pluginEnvironment;
-    private final SpongePluginManager pluginManager;
+    protected final PluginLoader pluginLoader;
+    protected final SpongePluginManager pluginManager;
     private final List<PluginContainer> launcherPlugins;
     private PluginContainer minecraftPlugin, apiPlugin, commonPlugin;
 
-    protected Launcher(final SpongePluginManager pluginManager) {
+    protected Launcher(final PluginLoader pluginLoader, final SpongePluginManager pluginManager) {
         this.logger = LogManager.getLogger("Sponge");
-        this.pluginEnvironment = new PluginEnvironment();
+        this.pluginLoader = pluginLoader;
         this.pluginManager = pluginManager;
         this.launcherPlugins = new ArrayList<>();
     }
@@ -83,16 +82,16 @@ public abstract class Launcher {
         return this.logger;
     }
 
-    public final PluginEnvironment getPluginEnvironment() {
-        return this.pluginEnvironment;
+    public PluginLoader getPluginLoader() {
+        return this.pluginLoader;
     }
 
-    public final SpongePluginManager getPluginManager() {
+    public SpongePluginManager getPluginManager() {
         return this.pluginManager;
     }
 
     public final Injector getPlatformInjector() {
-        return this.pluginEnvironment.getBlackboard().get(PluginKeys.PARENT_INJECTOR).get();
+        return this.pluginLoader.getPluginEnvironment().getBlackboard().get(PluginKeys.PARENT_INJECTOR).get();
     }
 
     public abstract Stage getInjectionStage();
@@ -150,20 +149,12 @@ public abstract class Launcher {
         return this.launcherPlugins;
     }
 
-    protected void onLaunch(final String pluginSpiVersion, final Path baseDirectory, final List<Path> pluginDirectories, final String[] args) {
-        this.populateBlackboard(pluginSpiVersion, baseDirectory, pluginDirectories);
+    protected void onLaunch() {
         this.createInternalPlugins();
     }
 
-    protected void populateBlackboard(final String pluginSpiVersion, final Path baseDirectory, final List<Path> pluginDirectories) {
-        final Blackboard blackboard = this.getPluginEnvironment().getBlackboard();
-        blackboard.getOrCreate(PluginKeys.VERSION, () -> pluginSpiVersion);
-        blackboard.getOrCreate(PluginKeys.BASE_DIRECTORY, () -> baseDirectory);
-        blackboard.getOrCreate(PluginKeys.PLUGIN_DIRECTORIES, () -> pluginDirectories);
-    }
-
     private void createInternalPlugins() {
-        final Path gameDirectory = this.pluginEnvironment.getBlackboard().get(PluginKeys.BASE_DIRECTORY).get();
+        final Path gameDirectory = this.pluginLoader.getPluginEnvironment().getBlackboard().get(PluginKeys.BASE_DIRECTORY).get();
         try {
             final Collection<PluginMetadata> read = PluginMetadataHelper.builder().build().read(Launcher.class.getResourceAsStream("/META-INF/plugins.json"));
             for (final PluginMetadata metadata : read) {

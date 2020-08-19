@@ -50,7 +50,8 @@ public final class JavaPluginLanguageService extends JVMPluginLanguageService<JV
     }
 
     @Override
-    protected Object createPluginInstance(final PluginEnvironment environment, final JVMPluginContainer container, final ClassLoader targetClassLoader) throws InvalidPluginException {
+    protected Object createPluginInstance(final PluginEnvironment environment, final JVMPluginContainer container, final ClassLoader
+            targetClassLoader) throws InvalidPluginException {
         try {
             final String mainClass = container.getMetadata().getMainClass();
             final Class<?> pluginClass = Class.forName(mainClass, true, targetClassLoader);
@@ -61,7 +62,7 @@ public final class JavaPluginLanguageService extends JVMPluginLanguageService<JV
             }
             return pluginClass.newInstance();
         } catch (final Exception ex) {
-            throw new InvalidPluginException("An error occurred creating an instance of plugin '" + container.getMetadata().getId() + "'!", ex);
+            throw new InvalidPluginException(ex);
         }
     }
 }

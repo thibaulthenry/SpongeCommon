@@ -22,37 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.mixin.core.entity.item.minecart;
+package org.spongepowered.common.launch.plugin;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.item.minecart.ContainerMinecartEntity;
-import net.minecraft.world.dimension.DimensionType;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.plugin.PluginEnvironment;
 
-import javax.annotation.Nullable;
+public interface PluginLoader {
 
-@Mixin(ContainerMinecartEntity.class)
-public abstract class ContainerMinecartEntityMixin extends AbstractMinecartEntityMixin {
-
-    @Shadow private boolean dropContentsWhenDead;
-
-    /**
-     * @author Zidane - June 2019 - 1.12.2
-     * @author i509VCB - Feb 2020 - 1.14.4
-     * @reason Only have this Minecart not drop contents if we actually changed dimension
-     */
-    @Override
-    @Nullable
-    public Entity changeDimension(DimensionType dimensionIn) {
-        final Entity entity = super.changeDimension(dimensionIn);
-
-        if (entity instanceof ContainerMinecartEntity) {
-            // We actually teleported so...
-            this.dropContentsWhenDead = false;
-        }
-
-        return entity;
-    }
-
+    PluginEnvironment getPluginEnvironment();
 }

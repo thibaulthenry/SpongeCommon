@@ -38,8 +38,6 @@ import java.util.function.Predicate;
 /**
  * The common Sponge {@link ILaunchHandlerService launch handler} for development
  * and production environments.
- *
- * @author Jamie Mansfield
  */
 public abstract class AbstractSpongeLaunchHandler implements ILaunchHandlerService {
 
@@ -57,11 +55,10 @@ public abstract class AbstractSpongeLaunchHandler implements ILaunchHandlerServi
      * be to exclude {@code "org.neptune."}.
      */
     protected static final List<String> EXCLUDED_PACKAGES = Arrays.asList(
-            // Libraries
-            //"ninja.leaping.configurate.",
-
-            // Implementation
-            //"org.spongepowered.vanilla.launch."
+            "com.google.inject",
+            "org.spongepowered.plugin.",
+            "org.spongepowered.common.launch.plugin.PluginLoader",
+            "org.spongepowered.vanilla.launch.plugin.VanillaPluginLoader"
     );
 
     @Override
