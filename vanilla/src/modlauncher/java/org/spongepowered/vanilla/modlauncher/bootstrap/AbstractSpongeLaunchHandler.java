@@ -55,10 +55,9 @@ public abstract class AbstractSpongeLaunchHandler implements ILaunchHandlerServi
      * be to exclude {@code "org.neptune."}.
      */
     protected static final List<String> EXCLUDED_PACKAGES = Arrays.asList(
-            "com.google.inject",
             "org.spongepowered.plugin.",
-            "org.spongepowered.common.launch.plugin.PluginLoader",
-            "org.spongepowered.vanilla.launch.plugin.VanillaPluginLoader"
+            "org.spongepowered.common.launch.plugin.loader.",
+            "org.spongepowered.vanilla.launch.plugin.loader."
     );
 
     @Override

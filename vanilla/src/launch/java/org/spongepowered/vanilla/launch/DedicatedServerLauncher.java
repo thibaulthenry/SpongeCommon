@@ -25,25 +25,18 @@
 package org.spongepowered.vanilla.launch;
 
 import com.google.inject.Stage;
-import net.java.games.util.plugins.PluginLoader;
 import net.minecraft.server.MinecraftServer;
-import org.spongepowered.api.Client;
-import org.spongepowered.api.Server;
 import org.spongepowered.common.SpongeBootstrap;
 import org.spongepowered.common.launch.Launcher;
-import org.spongepowered.plugin.PluginEnvironment;
-import org.spongepowered.vanilla.launch.plugin.VanillaPluginLoader;
-
-import java.nio.file.Path;
-import java.util.List;
+import org.spongepowered.vanilla.launch.plugin.loader.VanillaPluginLocator;
 
 public final class DedicatedServerLauncher extends VanillaLauncher {
 
-    protected DedicatedServerLauncher(final VanillaPluginLoader pluginLoader, final Stage injectionStage) {
-        super(pluginLoader, injectionStage);
+    protected DedicatedServerLauncher(final VanillaPluginLocator pluginLocator, final Stage injectionStage) {
+        super(pluginLocator, injectionStage);
     }
 
-    public static void launch(final VanillaPluginLoader pluginLoader, final Boolean isDeveloperEnvironment, final String[] args) {
+    public static void launch(final VanillaPluginLocator pluginLoader, final Boolean isDeveloperEnvironment, final String[] args) {
         final DedicatedServerLauncher launcher = new DedicatedServerLauncher(pluginLoader, isDeveloperEnvironment ? Stage.DEVELOPMENT :
                 Stage.PRODUCTION);
         Launcher.setInstance(launcher);

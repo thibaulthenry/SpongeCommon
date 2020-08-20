@@ -22,11 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.launch.plugin;
+package org.spongepowered.common.launch.plugin.loader;
 
 import org.spongepowered.plugin.PluginEnvironment;
 
-public interface PluginLoader {
+public interface PluginLocator {
 
     PluginEnvironment getPluginEnvironment();
 }

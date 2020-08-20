@@ -27,7 +27,13 @@ package org.spongepowered.vanilla.launch.plugin;
 import com.google.inject.Singleton;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.spongepowered.common.launch.plugin.SpongePluginManager;
+import org.spongepowered.plugin.InvalidPluginException;
+import org.spongepowered.plugin.PluginCandidate;
 import org.spongepowered.plugin.PluginContainer;
+import org.spongepowered.plugin.PluginLanguageService;
+import org.spongepowered.plugin.PluginLoader;
+import org.spongepowered.vanilla.launch.VanillaLauncher;
+import org.spongepowered.vanilla.launch.plugin.loader.VanillaPluginLocator;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -84,5 +90,35 @@ public final class VanillaPluginManager implements SpongePluginManager {
         this.plugins.put(plugin.getMetadata().getId(), plugin);
         this.instancesToPlugins.put(plugin.getInstance(), plugin);
         this.sortedPlugins.add(plugin);
+    }
+
+    public void loadPlugins(final VanillaPluginLocator loader) {
+        for (final Map.Entry<PluginLanguageService, List<PluginCandidate>> languageCandidates : loader.getCandidates().entrySet()) {
+            final PluginLanguageService languageService = languageCandidates.getKey();
+            final Collection<PluginCandidate> candidates = languageCandidates.getValue();
+            final String loaderClass = languageService.getPluginLoader();
+            final org.spongepowered.plugin.PluginLoader<PluginContainer> pluginLoader;
+            try {
+                pluginLoader =  (PluginLoader<PluginContainer>) Class.forName(loaderClass).newInstance();
+            } catch (final InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+            for (final PluginCandidate candidate : candidates) {
+                final PluginContainer pluginContainer = pluginLoader.createPluginContainer(candidate, loader.getPluginEnvironment()).orElse(null);
+                if (pluginContainer == null) {
+                    loader.getPluginEnvironment().getLogger().debug("Language service '{}' returned a null plugin container for '{}'.",
+                            languageService.getName(), candidate.getMetadata().getId());
+                    continue;
+                }
+
+                try {
+                    pluginLoader.loadPlugin(loader.getPluginEnvironment(), pluginContainer, VanillaLauncher.getInstance().getClass().getClassLoader());
+                    loader.getPluginEnvironment().getLogger().info("Loaded plugin '{}'", pluginContainer.getMetadata().getId());
+                    this.plugins.put(pluginContainer.getMetadata().getId(), pluginContainer);
+                } catch (final InvalidPluginException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }

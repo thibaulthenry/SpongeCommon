@@ -30,7 +30,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.util.PathConverter;
 import joptsimple.util.PathProperties;
-import org.spongepowered.vanilla.launch.plugin.VanillaPluginLoader;
+import org.spongepowered.vanilla.launch.plugin.loader.VanillaPluginLocator;
 import org.spongepowered.vanilla.modlauncher.util.ArgumentList;
 import org.spongepowered.plugin.PluginEnvironment;
 import org.spongepowered.plugin.PluginKeys;
@@ -43,7 +43,7 @@ import java.util.Arrays;
 
 public final class Main {
 
-    private static VanillaPluginLoader pluginLoader;
+    private static VanillaPluginLocator pluginLoader;
 
     public static void main(final String[] args) throws IOException {
         final OptionParser parser = new OptionParser();
@@ -65,13 +65,13 @@ public final class Main {
         // TODO Read in plugin directories from CLI/Config
         pluginEnvironment.getBlackboard().getOrCreate(PluginKeys.PLUGIN_DIRECTORIES, () -> Arrays.asList(modsDirectory, gameDirectory.resolve("plugins")));
 
-        Main.pluginLoader = new VanillaPluginLoader(pluginEnvironment);
+        Main.pluginLoader = new VanillaPluginLocator(pluginEnvironment);
 
         final ArgumentList lst = ArgumentList.from(args);
         Launcher.main(lst.getArguments());
     }
 
-    public static VanillaPluginLoader getPluginLoader() {
+    public static VanillaPluginLocator getPluginLocator() {
         return Main.pluginLoader;
     }
 }

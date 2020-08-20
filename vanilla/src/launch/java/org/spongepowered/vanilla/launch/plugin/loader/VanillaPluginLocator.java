@@ -22,10 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.vanilla.launch.plugin;
+package org.spongepowered.vanilla.launch.plugin.loader;
 
-import org.spongepowered.common.launch.plugin.PluginLoader;
-import org.spongepowered.plugin.InvalidPluginException;
+import org.spongepowered.common.launch.plugin.loader.PluginLocator;
 import org.spongepowered.plugin.PluginCandidate;
 import org.spongepowered.plugin.PluginContainer;
 import org.spongepowered.plugin.PluginEnvironment;
@@ -36,20 +35,20 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 
-public final class VanillaPluginLoader implements PluginLoader {
+public final class VanillaPluginLocator implements PluginLocator {
 
     private final PluginEnvironment pluginEnvironment;
-    private final Map<String, PluginLanguageService<PluginContainer>> languageServices;
+    private final Map<String, PluginLanguageService> languageServices;
     private final Map<String, List<Path>> pluginFiles;
-    private final Map<PluginLanguageService<PluginContainer>, List<PluginCandidate>> pluginCandidates;
 
-    public VanillaPluginLoader(final PluginEnvironment pluginEnvironment) {
+    private final Map<PluginLanguageService, List<PluginCandidate>> pluginCandidates;
+
+    public VanillaPluginLocator(final PluginEnvironment pluginEnvironment) {
         this.pluginEnvironment = pluginEnvironment;
         this.languageServices = new HashMap<>();
         this.pluginFiles = new HashMap<>();
@@ -61,7 +60,7 @@ public final class VanillaPluginLoader implements PluginLoader {
         return this.pluginEnvironment;
     }
 
-    public Map<String, PluginLanguageService<?>> getServices() {
+    public Map<String, PluginLanguageService> getServices() {
         return Collections.unmodifiableMap(this.languageServices);
     }
 
@@ -69,19 +68,22 @@ public final class VanillaPluginLoader implements PluginLoader {
         return Collections.unmodifiableMap(this.pluginFiles);
     }
 
+    public Map<PluginLanguageService, List<PluginCandidate>> getCandidates() {
+        return this.pluginCandidates;
+    }
+
     public void initialize() {
-        for (final Map.Entry<String, PluginLanguageService<PluginContainer>> entry : this.languageServices.entrySet()) {
+        for (final Map.Entry<String, PluginLanguageService> entry : this.languageServices.entrySet()) {
             entry.getValue().initialize(this.pluginEnvironment);
         }
     }
 
     public void discoverLanguageServices() {
-        final ServiceLoader<PluginLanguageService> serviceLoader = ServiceLoader.load(PluginLanguageService.class, VanillaPluginLoader.class
+        final ServiceLoader<PluginLanguageService> serviceLoader = ServiceLoader.load(PluginLanguageService.class, VanillaPluginLocator.class
                 .getClassLoader());
 
-        for (final Iterator<PluginLanguageService<PluginContainer>>iter = (Iterator<PluginLanguageService<PluginContainer>>) (Object) serviceLoader
-                .iterator(); iter.hasNext(); ) {
-            final PluginLanguageService<PluginContainer> next;
+        for (final Iterator<PluginLanguageService>iter = (Iterator<PluginLanguageService>) (Object) serviceLoader.iterator(); iter.hasNext(); ) {
+            final PluginLanguageService next;
 
             try {
                 next = iter.next();
@@ -95,8 +97,8 @@ public final class VanillaPluginLoader implements PluginLoader {
     }
 
     public void discoverPluginResources() {
-        for (final Map.Entry<String, PluginLanguageService<PluginContainer>> languageEntry : this.languageServices.entrySet()) {
-            final PluginLanguageService<PluginContainer> languageService = languageEntry.getValue();
+        for (final Map.Entry<String, PluginLanguageService> languageEntry : this.languageServices.entrySet()) {
+            final PluginLanguageService languageService = languageEntry.getValue();
             final List<Path> pluginFiles = languageService.discoverPluginResources(this.pluginEnvironment);
             if (pluginFiles.size() > 0) {
                 this.pluginFiles.put(languageEntry.getKey(), pluginFiles);
@@ -105,39 +107,12 @@ public final class VanillaPluginLoader implements PluginLoader {
     }
 
     public void createPluginCandidates() {
-        for (final Map.Entry<String, PluginLanguageService<PluginContainer>> languageEntry : this.languageServices.entrySet()) {
-            final PluginLanguageService<PluginContainer> languageService = languageEntry.getValue();
+        for (final Map.Entry<String, PluginLanguageService> languageEntry : this.languageServices.entrySet()) {
+            final PluginLanguageService languageService = languageEntry.getValue();
             final List<PluginCandidate> pluginCandidates = languageService.createPluginCandidates(this.pluginEnvironment);
             if (pluginCandidates.size() > 0) {
                 this.pluginCandidates.put(languageService, pluginCandidates);
             }
         }
-    }
-
-    public List<PluginContainer> createPlugins() {
-        final List<PluginContainer> plugins = new LinkedList<>();
-
-        for (final Map.Entry<PluginLanguageService<PluginContainer>, List<PluginCandidate>> languageCandidates : this.pluginCandidates.entrySet()) {
-            final PluginLanguageService<PluginContainer> languageService = languageCandidates.getKey();
-            final Collection<PluginCandidate> candidates = languageCandidates.getValue();
-            for (final PluginCandidate candidate : candidates) {
-                final PluginContainer pluginContainer = languageService.createPluginContainer(candidate, this.pluginEnvironment).orElse(null);
-                if (pluginContainer == null) {
-                    this.pluginEnvironment.getLogger().debug("Language service '{}' returned a null plugin container for '{}'.",
-                            languageService.getName(), candidate.getMetadata().getId());
-                    continue;
-                }
-
-                try {
-                    languageService.loadPlugin(this.pluginEnvironment, pluginContainer, JavaPluginLanguageService.class.getClassLoader());
-                    this.pluginEnvironment.getLogger().info("Loaded plugin '{}'", pluginContainer.getMetadata().getId());
-                    plugins.add(pluginContainer);
-                } catch (final InvalidPluginException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        return plugins;
     }
 }

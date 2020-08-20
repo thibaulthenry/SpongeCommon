@@ -25,13 +25,8 @@
 package org.spongepowered.vanilla.modlauncher.bootstrap;
 
 import cpw.mods.modlauncher.api.ITransformingClassLoader;
-import org.spongepowered.plugin.PluginEnvironment;
-import org.spongepowered.plugin.PluginKeys;
-import org.spongepowered.vanilla.launch.plugin.VanillaPluginLoader;
+import org.spongepowered.vanilla.launch.plugin.loader.VanillaPluginLocator;
 import org.spongepowered.vanilla.modlauncher.Main;
-
-import java.nio.file.Path;
-import java.util.List;
 
 public final class ClientDevLaunchHandler extends AbstractSpongeDevLaunchHandler {
 
@@ -42,8 +37,8 @@ public final class ClientDevLaunchHandler extends AbstractSpongeDevLaunchHandler
 
     @Override
     protected void launchService0(final String[] arguments, final ITransformingClassLoader launchClassLoader) throws Exception {
-        Class.forName("org.spongepowered.vanilla.launch.ClientLauncher", true, launchClassLoader.getInstance()).getMethod("launch",
-                VanillaPluginLoader.class, Boolean.class, String[].class).invoke(null,
-                Main.getPluginLoader(), Boolean.TRUE, arguments);
+        Class.forName("org.spongepowered.vanilla.launch.ClientLauncher", true, launchClassLoader.getInstance())
+                .getMethod("launch", VanillaPluginLocator.class, Boolean.class, String[].class)
+                .invoke(null, Main.getPluginLocator(), Boolean.TRUE, arguments);
     }
 }
