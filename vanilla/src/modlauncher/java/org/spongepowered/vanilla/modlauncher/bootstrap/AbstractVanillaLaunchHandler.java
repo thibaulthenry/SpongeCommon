@@ -39,7 +39,7 @@ import java.util.function.Predicate;
  * The common Sponge {@link ILaunchHandlerService launch handler} for development
  * and production environments.
  */
-public abstract class AbstractSpongeLaunchHandler implements ILaunchHandlerService {
+public abstract class AbstractVanillaLaunchHandler implements ILaunchHandlerService {
 
     protected static final Logger log = LogManager.getLogger("Sponge Launch");
 

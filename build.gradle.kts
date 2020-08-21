@@ -142,6 +142,11 @@ dependencies {
     implementation("org.ow2.asm:asm-util:6.2")
     implementation("org.ow2.asm:asm-tree:6.2")
 
+    annotationProcessor("org.spongepowered:mixin:0.8")
+    annotationProcessor("com.google.code.gson:gson:2.2.4")
+    annotationProcessor("com.google.guava:guava:21.0")
+    annotationProcessor("org.ow2.asm:asm-tree:6.2")
+
     // Launch Dependencies - Needed to bootstrap the engine(s)
     launchConfig(project(":SpongeAPI"))
     launchConfig("org.spongepowered:plugin-spi:0.1.1-SNAPSHOT")
@@ -436,6 +441,11 @@ project("SpongeVanilla") {
         implementation(project(commonProject.path)) {
             exclude(group = "net.minecraft", module = "$minecraftDep")
         }
+        annotationProcessor("org.spongepowered:mixin:0.8")
+        annotationProcessor("com.google.code.gson:gson:2.2.4")
+        annotationProcessor("com.google.guava:guava:21.0")
+        annotationProcessor("org.ow2.asm:asm-tree:6.2")
+
         vanillaMixinsImplementation(project(commonProject.path)) {
             exclude(group = "net.minecraft", module = "$minecraftDep")
         }

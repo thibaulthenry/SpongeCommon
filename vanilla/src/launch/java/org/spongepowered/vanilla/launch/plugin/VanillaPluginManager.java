@@ -114,7 +114,7 @@ public final class VanillaPluginManager implements SpongePluginManager {
                 try {
                     pluginLoader.loadPlugin(loader.getPluginEnvironment(), pluginContainer, VanillaLauncher.getInstance().getClass().getClassLoader());
                     loader.getPluginEnvironment().getLogger().info("Loaded plugin '{}'", pluginContainer.getMetadata().getId());
-                    this.plugins.put(pluginContainer.getMetadata().getId(), pluginContainer);
+                    this.addPlugin(pluginContainer);
                 } catch (final InvalidPluginException e) {
                     e.printStackTrace();
                 }

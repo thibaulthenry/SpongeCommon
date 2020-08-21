@@ -26,7 +26,6 @@ package org.spongepowered.vanilla.launch.plugin.loader;
 
 import org.spongepowered.common.launch.plugin.loader.PluginLocator;
 import org.spongepowered.plugin.PluginCandidate;
-import org.spongepowered.plugin.PluginContainer;
 import org.spongepowered.plugin.PluginEnvironment;
 import org.spongepowered.plugin.PluginLanguageService;
 
@@ -80,9 +79,9 @@ public final class VanillaPluginLocator implements PluginLocator {
 
     public void discoverLanguageServices() {
         final ServiceLoader<PluginLanguageService> serviceLoader = ServiceLoader.load(PluginLanguageService.class, VanillaPluginLocator.class
-                .getClassLoader());
+            .getClassLoader());
 
-        for (final Iterator<PluginLanguageService>iter = (Iterator<PluginLanguageService>) (Object) serviceLoader.iterator(); iter.hasNext(); ) {
+        for (final Iterator<PluginLanguageService> iter = serviceLoader.iterator(); iter.hasNext(); ) {
             final PluginLanguageService next;
 
             try {

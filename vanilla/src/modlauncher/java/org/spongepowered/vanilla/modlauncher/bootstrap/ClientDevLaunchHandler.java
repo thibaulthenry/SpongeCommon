@@ -28,7 +28,7 @@ import cpw.mods.modlauncher.api.ITransformingClassLoader;
 import org.spongepowered.vanilla.launch.plugin.loader.VanillaPluginLocator;
 import org.spongepowered.vanilla.modlauncher.Main;
 
-public final class ClientDevLaunchHandler extends AbstractSpongeDevLaunchHandler {
+public final class ClientDevLaunchHandler extends AbstractVanillaDevLaunchHandler {
 
     @Override
     public String name() {
