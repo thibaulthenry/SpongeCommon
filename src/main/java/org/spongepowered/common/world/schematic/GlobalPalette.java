@@ -45,7 +45,7 @@ import java.util.function.IntFunction;
 
 import javax.annotation.Nullable;
 
-public class GlobalPalette<T extends CatalogType> implements Palette<T> {
+public class GlobalPalette<T> implements Palette<T> {
 
     @Nullable
     private static Palette<BlockState> blockPalette;

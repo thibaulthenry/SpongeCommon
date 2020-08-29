@@ -35,7 +35,7 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 
-public class BimapPalette<T extends CatalogType> implements Palette<T> {
+public class BimapPalette<T> implements Palette<T> {
 
     private static final int DEFAULT_ALLOCATION_SIZE = 64;
 
