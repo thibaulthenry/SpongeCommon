@@ -24,6 +24,7 @@
  */
 package org.spongepowered.common.block;
 
+import net.minecraft.command.arguments.BlockStateParser;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.block.BlockTypes;
@@ -40,7 +41,7 @@ import java.util.Optional;
 
 public class SpongeBlockStateBuilder extends AbstractDataBuilder<BlockState> implements BlockState.Builder {
 
-    private BlockState blockState;
+    private BlockState blockState = BlockTypes.STONE.get().getDefaultState();
 
     public SpongeBlockStateBuilder() {
         super(BlockState.class, 1);
@@ -89,4 +90,11 @@ public class SpongeBlockStateBuilder extends AbstractDataBuilder<BlockState> imp
             throw new InvalidDataException("Could not retrieve a blockstate!", e);
         }
     }
+
+    @Override
+    public BlockState.Builder fromString(final String id) {
+        this.blockState = this.parseString(id);
+        return this;
+    }
+
 }
