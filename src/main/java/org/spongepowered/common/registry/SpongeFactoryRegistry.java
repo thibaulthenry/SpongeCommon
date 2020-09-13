@@ -31,6 +31,7 @@ import com.google.inject.Singleton;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import org.spongepowered.api.advancement.criteria.AdvancementCriterion;
 import org.spongepowered.api.adventure.Audiences;
+import org.spongepowered.api.adventure.ComponentTemplate;
 import org.spongepowered.api.adventure.SpongeComponents;
 import org.spongepowered.api.command.CommandCause;
 import org.spongepowered.api.command.parameter.Parameter;
@@ -51,6 +52,7 @@ import org.spongepowered.api.world.BlockChangeFlag;
 import org.spongepowered.api.world.ServerLocation;
 import org.spongepowered.common.adventure.AudienceFactory;
 import org.spongepowered.common.adventure.SpongeAdventure;
+import org.spongepowered.common.adventure.SpongeComponentTemplateFactory;
 import org.spongepowered.common.command.manager.SpongeCommandCauseFactory;
 import org.spongepowered.common.command.parameter.SpongeParameterValueFactory;
 import org.spongepowered.common.command.parameter.managed.factory.SpongeVariableValueParameterBuilderFactory;
@@ -126,6 +128,7 @@ public final class SpongeFactoryRegistry implements FactoryRegistry {
             .registerFactory(DataManipulator.Mutable.Factory.class, MutableDataManipulatorFactory.INSTANCE)
             .registerFactory(DataManipulator.Immutable.Factory.class, ImmutableDataManipulatorFactory.INSTANCE)
             .registerFactory(BlockChangeFlag.Factory.class, BlockChangeFlagManager.getInstance().getFactory())
+            .registerFactory(ComponentTemplate.Factory.class, new SpongeComponentTemplateFactory())
         ;
     }
 
