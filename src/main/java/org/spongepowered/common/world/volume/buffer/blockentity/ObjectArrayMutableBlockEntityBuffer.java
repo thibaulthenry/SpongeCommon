@@ -29,13 +29,16 @@ import net.minecraft.util.math.BlockPos;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.block.entity.BlockEntity;
 import org.spongepowered.api.world.volume.stream.StreamOptions;
+import org.spongepowered.api.world.volume.stream.VolumeElement;
 import org.spongepowered.api.world.volume.stream.VolumeStream;
+import org.spongepowered.common.world.volume.SpongeVolumeStream;
+import org.spongepowered.common.world.volume.VolumeStreamUtils;
 import org.spongepowered.math.vector.Vector3i;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class ObjectArrayMutableBlockEntityBuffer extends AbstractMutableBlockEntityBuffer<ObjectArrayMutableBlockEntityBuffer> {
 
@@ -65,14 +68,11 @@ public class ObjectArrayMutableBlockEntityBuffer extends AbstractMutableBlockEnt
     public VolumeStream<ObjectArrayMutableBlockEntityBuffer, BlockEntity> getBlockEntityStream(final Vector3i min, final Vector3i max,
         final StreamOptions options
     ) {
-        if (this.getBlockMin().compareTo(Objects.requireNonNull(min, "Minimum coordinates cannot be null!")) < 0) {
-            throw new IllegalArgumentException(String.format("Minimum %s cannot be lower than the current minimum coordinates: %s", min, this.getBlockMin()));
-        }
-        if (this.getBlockMax().compareTo(Objects.requireNonNull(max, "Minimum coordinates cannot be null!")) < 0) {
-            throw new IllegalArgumentException(String.format("Maximum %s cannot be greater than the current maximum coordinates: %s", max, this.getBlockMax()));
-        }
+        VolumeStreamUtils.validateStreamArgs(min, max, this.getBlockMin(), this.getBlockMax(), options);
 
-        return null;
+        final Stream<VolumeElement<ObjectArrayMutableBlockEntityBuffer, BlockEntity>> blockEntityStream = this.blockEntities.stream()
+            .map(be -> VolumeElement.of(this, be, be.getBlockPosition()));
+        return new SpongeVolumeStream<>(blockEntityStream, () -> this);
     }
 
     @Override

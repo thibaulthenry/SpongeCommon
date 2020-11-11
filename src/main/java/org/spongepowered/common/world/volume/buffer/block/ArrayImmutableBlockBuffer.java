@@ -31,11 +31,17 @@ import org.spongepowered.api.fluid.FluidState;
 import org.spongepowered.api.world.schematic.Palette;
 import org.spongepowered.api.world.volume.block.ImmutableBlockVolume;
 import org.spongepowered.api.world.volume.stream.StreamOptions;
+import org.spongepowered.api.world.volume.stream.VolumeElement;
 import org.spongepowered.api.world.volume.stream.VolumeStream;
 import org.spongepowered.common.world.schematic.GlobalPalette;
+import org.spongepowered.common.world.volume.SpongeVolumeStream;
+import org.spongepowered.common.world.volume.VolumeStreamUtils;
 import org.spongepowered.math.vector.Vector3i;
 
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class ArrayImmutableBlockBuffer extends AbstractBlockBuffer implements ImmutableBlockVolume {
 
@@ -122,6 +128,14 @@ public class ArrayImmutableBlockBuffer extends AbstractBlockBuffer implements Im
     @Override
     public VolumeStream<ImmutableBlockVolume, BlockState> getBlockStateStream(final Vector3i min, final Vector3i max, final StreamOptions options
     ) {
-        return null;
+        VolumeStreamUtils.validateStreamArgs(min, max, this.getBlockMin(), this.getBlockMax(), options);
+        // We don't need to copy since this is immutable.
+        final Stream<VolumeElement<ImmutableBlockVolume, BlockState>> stateStream = IntStream.range(this.getBlockMin().getX(), this.getBlockMax().getX() + 1)
+            .mapToObj(x -> IntStream.range(this.getBlockMin().getZ(), this.getBlockMax().getZ() + 1)
+                .mapToObj(z -> IntStream.range(this.getBlockMin().getY(), this.getBlockMax().getY() + 1)
+                    .mapToObj(y -> VolumeElement.<ImmutableBlockVolume, BlockState>of(this, () -> this.getBlock(x, y, z), new Vector3i(x, y, z)))
+                ).flatMap(Function.identity())
+            ).flatMap(Function.identity());
+        return new SpongeVolumeStream<>(stateStream, () -> this);
     }
 }

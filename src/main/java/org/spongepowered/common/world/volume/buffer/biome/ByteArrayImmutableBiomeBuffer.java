@@ -30,12 +30,18 @@ import org.spongepowered.api.world.biome.BiomeTypes;
 import org.spongepowered.api.world.schematic.Palette;
 import org.spongepowered.api.world.volume.biome.ImmutableBiomeVolume;
 import org.spongepowered.api.world.volume.stream.StreamOptions;
+import org.spongepowered.api.world.volume.stream.VolumeElement;
 import org.spongepowered.api.world.volume.stream.VolumeStream;
 import org.spongepowered.common.world.schematic.GlobalPalette;
+import org.spongepowered.common.world.volume.SpongeVolumeStream;
+import org.spongepowered.common.world.volume.VolumeStreamUtils;
 import org.spongepowered.math.vector.Vector3i;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Immutable biome volume, backed by a byte array. The array passed to the
@@ -103,6 +109,19 @@ public final class ByteArrayImmutableBiomeBuffer extends AbstractBiomeBuffer imp
     @Override
     public VolumeStream<ImmutableBiomeVolume, BiomeType> getBiomeStream(final Vector3i min, final Vector3i max, final StreamOptions options
     ) {
-        return null;
+        final Vector3i blockMin = this.getBlockMin();
+        final Vector3i blockMax = this.getBlockMax();
+        VolumeStreamUtils.validateStreamArgs(min, max, blockMin, blockMax, options);
+
+        final Stream<VolumeElement<ImmutableBiomeVolume, BiomeType>> stateStream = IntStream.range(blockMin.getX(), blockMax.getX() + 1)
+            .mapToObj(x -> IntStream.range(blockMin.getZ(), blockMax.getZ() + 1)
+                .mapToObj(z -> IntStream.range(blockMin.getY(), blockMax.getY() + 1)
+                    .mapToObj(y -> VolumeElement.<ImmutableBiomeVolume, BiomeType>of(this, () -> {
+                        final byte biomeId = this.biomes[this.getIndex(x, y, z)];
+                        return this.palette.get(biomeId & 255).orElseGet(BiomeTypes.OCEAN);
+                    }, new Vector3i(x, y, z)))
+                ).flatMap(Function.identity())
+            ).flatMap(Function.identity());
+        return new SpongeVolumeStream<>(stateStream, () -> this);
     }
 }

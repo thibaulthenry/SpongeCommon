@@ -62,11 +62,11 @@ import org.spongepowered.asm.mixin.Intrinsic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.common.bridge.world.dimension.DimensionTypeBridge;
-import org.spongepowered.common.world.volume.MemoryBackedEntityVolume;
 import org.spongepowered.common.world.volume.VolumeStreamUtils;
 import org.spongepowered.common.world.volume.buffer.biome.ObjectArrayMutableBiomeBuffer;
 import org.spongepowered.common.world.volume.buffer.block.ArrayMutableBlockBuffer;
 import org.spongepowered.common.world.volume.buffer.blockentity.ObjectArrayMutableBlockEntityBuffer;
+import org.spongepowered.common.world.volume.buffer.entity.ObjectArrayMutableEntityVolume;
 import org.spongepowered.math.vector.Vector3d;
 import org.spongepowered.math.vector.Vector3i;
 
@@ -219,26 +219,10 @@ public interface IWorldReaderMixin_API<R extends ReadableRegion<R>> extends Read
         return (BiomeType) this.shadow$getBiome(new BlockPos(x, y, z));
     }
 
-    default void api$validateStreamParams(final Vector3i min, final Vector3i max, final StreamOptions options) {
-        Objects.requireNonNull(min, "Minimum coordinates cannot be null");
-        Objects.requireNonNull(max, "Maximum coordinates cannot be null");
-        Objects.requireNonNull(options, "StreamOptions cannot be null!");
-        if (min.getX() > max.getX()) {
-            throw new IllegalArgumentException("Min(x) must be greater than max(x)!");
-        }
-        if (min.getY() > max.getY()) {
-            throw new IllegalArgumentException("Min(y) must be greater than max y!");
-        }
-        if (min.getZ() > max.getZ()) {
-            throw new IllegalArgumentException("Min(z) must be greater than max z!");
-        }
-
-    }
-
     @SuppressWarnings({"RedundantCast", "RedundantTypeArguments", "unchecked"})
     @Override
     default VolumeStream<R, BiomeType> getBiomeStream(final Vector3i min, final Vector3i max, final StreamOptions options) {
-        this.api$validateStreamParams(min, max, options);
+        VolumeStreamUtils.validateStreamArgs(min, max, options);
 
         final boolean shouldCarbonCopy = options.carbonCopy();
         final ObjectArrayMutableBiomeBuffer backingVolume = new ObjectArrayMutableBiomeBuffer(min, max);
@@ -274,7 +258,7 @@ public interface IWorldReaderMixin_API<R extends ReadableRegion<R>> extends Read
     @SuppressWarnings({"RedundantTypeArguments", "unchecked", "RedundantCast"})
     @Override
     default VolumeStream<R, BlockState> getBlockStateStream(final Vector3i min, final Vector3i max, final StreamOptions options) {
-        this.api$validateStreamParams(min, max, options);
+        VolumeStreamUtils.validateStreamArgs(min, max, options);
 
         final boolean shouldCarbonCopy = options.carbonCopy();
         final ArrayMutableBlockBuffer backingVolume = new ArrayMutableBlockBuffer(min, max);
@@ -309,7 +293,7 @@ public interface IWorldReaderMixin_API<R extends ReadableRegion<R>> extends Read
     @SuppressWarnings({"unchecked", "RedundantTypeArguments", "RedundantCast"})
     @Override
     default VolumeStream<R, BlockEntity> getBlockEntityStream(final Vector3i min, final Vector3i max, final StreamOptions options) {
-        this.api$validateStreamParams(min, max, options);
+        VolumeStreamUtils.validateStreamArgs(min, max, options);
 
         final boolean shouldCarbonCopy = options.carbonCopy();
         final ObjectArrayMutableBlockEntityBuffer backingVolume = new ObjectArrayMutableBlockEntityBuffer(min, max);
@@ -348,10 +332,11 @@ public interface IWorldReaderMixin_API<R extends ReadableRegion<R>> extends Read
     @SuppressWarnings({"ConstantConditions", "RedundantCast", "rawtypes", "RedundantTypeArguments", "unchecked"})
     @Override
     default VolumeStream<R, Entity> getEntityStream(final Vector3i min, final Vector3i max, final StreamOptions options) {
-        this.api$validateStreamParams(min, max, options);
+        VolumeStreamUtils.validateStreamArgs(min, max, options);
 
         final boolean shouldCarbonCopy = options.carbonCopy();
-        final MemoryBackedEntityVolume backingVolume = new MemoryBackedEntityVolume(min, max);
+        final Vector3i size = max.min(min);
+        final ObjectArrayMutableEntityVolume backingVolume = new ObjectArrayMutableEntityVolume(min, size);
         return VolumeStreamUtils.<R, Entity, net.minecraft.entity.Entity, Chunk, UUID>generateStream(
             min,
             max,
@@ -367,7 +352,7 @@ public interface IWorldReaderMixin_API<R extends ReadableRegion<R>> extends Read
                     cloned,
                     () -> String.format("EntityType[%s] creates a null Entity!", EntityType.getKey(entity.getType()))
                 ).read(nbt);
-                backingVolume.addEntity(cloned);
+                backingVolume.spawnEntity((Entity) cloned);
             } : (pos, tile) -> {},
             // ChunkAccessor
             VolumeStreamUtils.getChunkAccessorByStatus((IWorldReader) (Object) this, options.loadingStyle().generateArea()),

@@ -33,6 +33,7 @@ import org.spongepowered.api.world.volume.stream.VolumeElement;
 import org.spongepowered.api.world.volume.stream.VolumeStream;
 import org.spongepowered.common.bridge.block.BlockStateBridge;
 import org.spongepowered.common.world.volume.SpongeVolumeStream;
+import org.spongepowered.common.world.volume.VolumeStreamUtils;
 import org.spongepowered.common.world.volume.buffer.block.AbstractBlockBuffer;
 import org.spongepowered.common.world.volume.buffer.block.ArrayMutableBlockBuffer;
 import org.spongepowered.math.vector.Vector3i;
@@ -94,10 +95,19 @@ public abstract class AbstractMutableBlockEntityBuffer<M extends AbstractMutable
     @Override
     public VolumeStream<M, BlockState> getBlockStateStream(final Vector3i min, final Vector3i max,
         final StreamOptions options) {
-        final Stream<VolumeElement<M, BlockState>> stateStream = IntStream.range(this.getBlockMin().getX(), this.getBlockMax().getX() + 1)
-            .mapToObj(x -> IntStream.range(this.getBlockMin().getZ(), this.getBlockMax().getZ() + 1)
-                .mapToObj(z -> IntStream.range(this.getBlockMin().getY(), this.getBlockMax().getY() + 1)
-                    .mapToObj(y -> VolumeElement.of((M) this, () -> this.blockBuffer.getBlock(x, y, z), new Vector3i(x, y, z)))
+        final Vector3i blockMin = this.getBlockMin();
+        final Vector3i blockMax = this.getBlockMax();
+        VolumeStreamUtils.validateStreamArgs(min, max, blockMin, blockMax, options);
+        final ArrayMutableBlockBuffer buffer;
+        if (options.carbonCopy()) {
+            buffer = this.blockBuffer.copy();
+        } else {
+            buffer = this.blockBuffer;
+        }
+        final Stream<VolumeElement<M, BlockState>> stateStream = IntStream.range(blockMin.getX(), blockMax.getX() + 1)
+            .mapToObj(x -> IntStream.range(blockMin.getZ(), blockMax.getZ() + 1)
+                .mapToObj(z -> IntStream.range(blockMin.getY(), blockMax.getY() + 1)
+                    .mapToObj(y -> VolumeElement.of((M) this, () -> buffer.getBlock(x, y, z), new Vector3i(x, y, z)))
                 ).flatMap(Function.identity())
             ).flatMap(Function.identity());
         return new SpongeVolumeStream<>(stateStream, () -> (M) this);

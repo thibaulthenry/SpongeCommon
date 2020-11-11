@@ -34,11 +34,17 @@ import org.spongepowered.api.world.biome.BiomeTypes;
 import org.spongepowered.api.world.biome.VirtualBiomeType;
 import org.spongepowered.api.world.volume.biome.MutableBiomeVolume;
 import org.spongepowered.api.world.volume.stream.StreamOptions;
+import org.spongepowered.api.world.volume.stream.VolumeElement;
 import org.spongepowered.api.world.volume.stream.VolumeStream;
+import org.spongepowered.common.world.volume.SpongeVolumeStream;
+import org.spongepowered.common.world.volume.VolumeStreamUtils;
 import org.spongepowered.math.vector.Vector3i;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Mutable view of a {@link Biome} array.
@@ -158,8 +164,26 @@ public final class ObjectArrayMutableBiomeBuffer extends AbstractBiomeBuffer imp
     }
 
     @Override
-    public VolumeStream<ObjectArrayMutableBiomeBuffer, BiomeType> getBiomeStream(Vector3i min, Vector3i max, StreamOptions options
+    public VolumeStream<ObjectArrayMutableBiomeBuffer, BiomeType> getBiomeStream(
+        final Vector3i min,
+        final Vector3i max,
+        final StreamOptions options
     ) {
-        return null;
+        final Vector3i blockMin = this.getBlockMin();
+        final Vector3i blockMax = this.getBlockMax();
+        VolumeStreamUtils.validateStreamArgs(min, max, blockMin, blockMax, options);
+        final BiomeType[] buffer;
+        if (options.carbonCopy()) {
+            buffer = Arrays.copyOf(this.biomes, this.biomes.length);
+        } else {
+            buffer = this.biomes;
+        }
+        final Stream<VolumeElement<ObjectArrayMutableBiomeBuffer, BiomeType>> stateStream = IntStream.range(blockMin.getX(), blockMax.getX() + 1)
+            .mapToObj(x -> IntStream.range(blockMin.getZ(), blockMax.getZ() + 1)
+                .mapToObj(z -> IntStream.range(blockMin.getY(), blockMax.getY() + 1)
+                    .mapToObj(y -> VolumeElement.of(this, () -> buffer[this.getIndex(x, y, z)], new Vector3i(x, y, z)))
+                ).flatMap(Function.identity())
+            ).flatMap(Function.identity());
+        return new SpongeVolumeStream<>(stateStream, () -> this);
     }
 }

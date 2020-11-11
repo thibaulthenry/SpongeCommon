@@ -29,10 +29,16 @@ import org.spongepowered.api.world.biome.BiomeType;
 import org.spongepowered.api.world.biome.VirtualBiomeType;
 import org.spongepowered.api.world.volume.biome.ImmutableBiomeVolume;
 import org.spongepowered.api.world.volume.stream.StreamOptions;
+import org.spongepowered.api.world.volume.stream.VolumeElement;
 import org.spongepowered.api.world.volume.stream.VolumeStream;
+import org.spongepowered.common.world.volume.SpongeVolumeStream;
+import org.spongepowered.common.world.volume.VolumeStreamUtils;
 import org.spongepowered.math.vector.Vector3i;
 
 import java.util.Arrays;
+import java.util.function.Function;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Mutable view of a {@link BiomeType} array.
@@ -106,8 +112,15 @@ public final class ObjectArrayImmutableBiomeBuffer extends AbstractBiomeBuffer i
     }
 
     @Override
-    public VolumeStream<ImmutableBiomeVolume, BiomeType> getBiomeStream(Vector3i min, Vector3i max, StreamOptions options
+    public VolumeStream<ImmutableBiomeVolume, BiomeType> getBiomeStream(final Vector3i min, final Vector3i max, final StreamOptions options
     ) {
-        return null;
+        VolumeStreamUtils.validateStreamArgs(min, max, options);
+        final Stream<VolumeElement<ImmutableBiomeVolume, BiomeType>> stateStream = IntStream.range(this.getBlockMin().getX(), this.getBlockMax().getX() + 1)
+            .mapToObj(x -> IntStream.range(this.getBlockMin().getZ(), this.getBlockMax().getZ() + 1)
+                .mapToObj(z -> IntStream.range(this.getBlockMin().getY(), this.getBlockMax().getY() + 1)
+                    .mapToObj(y -> VolumeElement.<ImmutableBiomeVolume, BiomeType>of(this, () -> this.biomes[this.getIndex(x, y, z)], new Vector3i(x, y, z)))
+                ).flatMap(Function.identity())
+            ).flatMap(Function.identity());
+        return new SpongeVolumeStream<>(stateStream, () -> this);
     }
 }

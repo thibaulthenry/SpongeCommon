@@ -39,6 +39,7 @@ import org.spongepowered.api.world.volume.stream.VolumeStream;
 import org.spongepowered.common.world.schematic.BimapPalette;
 import org.spongepowered.common.world.schematic.GlobalPalette;
 import org.spongepowered.common.world.volume.SpongeVolumeStream;
+import org.spongepowered.common.world.volume.VolumeStreamUtils;
 import org.spongepowered.math.vector.Vector3i;
 
 import java.util.Arrays;
@@ -191,10 +192,19 @@ public class ArrayMutableBlockBuffer extends AbstractBlockBuffer implements Muta
 
     @Override
     public VolumeStream<ArrayMutableBlockBuffer, BlockState> getBlockStateStream(final Vector3i min, final Vector3i max, final StreamOptions options) {
-        final Stream<VolumeElement<ArrayMutableBlockBuffer, BlockState>> stateStream = IntStream.range(this.getBlockMin().getX(), this.getBlockMax().getX() + 1)
-            .mapToObj(x -> IntStream.range(this.getBlockMin().getZ(), this.getBlockMax().getZ() + 1)
-                .mapToObj(z -> IntStream.range(this.getBlockMin().getY(), this.getBlockMax().getY() + 1)
-                    .mapToObj(y -> VolumeElement.of(this, () -> this.getBlock(x, y, z), new Vector3i(x, y, z)))
+        final Vector3i blockMin = this.getBlockMin();
+        final Vector3i blockMax = this.getBlockMax();
+        VolumeStreamUtils.validateStreamArgs(min, max, blockMin, blockMax, options);
+        final ArrayMutableBlockBuffer buffer;
+        if (options.carbonCopy()) {
+            buffer = new ArrayMutableBlockBuffer(this.palette, this.data.copyOf(), this.start, this.size);
+        } else {
+            buffer = this;
+        }
+        final Stream<VolumeElement<ArrayMutableBlockBuffer, BlockState>> stateStream = IntStream.range(blockMin.getX(), blockMax.getX() + 1)
+            .mapToObj(x -> IntStream.range(blockMin.getZ(), blockMax.getZ() + 1)
+                .mapToObj(z -> IntStream.range(blockMin.getY(), blockMax.getY() + 1)
+                    .mapToObj(y -> VolumeElement.of(this, () -> buffer.getBlock(x, y, z), new Vector3i(x, y, z)))
                 ).flatMap(Function.identity())
             ).flatMap(Function.identity());
         return new SpongeVolumeStream<>(stateStream, () -> this);
@@ -206,6 +216,10 @@ public class ArrayMutableBlockBuffer extends AbstractBlockBuffer implements Muta
 
     public net.minecraft.block.BlockState getBlock(final BlockPos blockPos) {
         return (net.minecraft.block.BlockState) this.getBlock(blockPos.getX(), blockPos.getY(), blockPos.getZ());
+    }
+
+    public ArrayMutableBlockBuffer copy() {
+        return  new ArrayMutableBlockBuffer(this.palette, this.data.copyOf(), this.start, this.size);
     }
 
 

@@ -35,6 +35,7 @@ import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.spongepowered.api.world.volume.Volume;
 import org.spongepowered.api.world.volume.game.ReadableRegion;
 import org.spongepowered.api.world.volume.stream.StreamOptions;
 import org.spongepowered.api.world.volume.stream.VolumeElement;
@@ -107,6 +108,31 @@ public final class VolumeStreamUtils {
         return VolumeStreamUtils.getElementByPosition(VolumeStreamUtils.chunkSectionBlockStateGetter());
     }
 
+    public static void validateStreamArgs(final Vector3i min, final Vector3i max, final StreamOptions options) {
+        Objects.requireNonNull(min, "Minimum coordinates cannot be null");
+        Objects.requireNonNull(max, "Maximum coordinates cannot be null");
+        Objects.requireNonNull(options, "StreamOptions cannot be null!");
+        if (min.getX() > max.getX()) {
+            throw new IllegalArgumentException("Min(x) must be greater than max(x)!");
+        }
+        if (min.getY() > max.getY()) {
+            throw new IllegalArgumentException("Min(y) must be greater than max y!");
+        }
+        if (min.getZ() > max.getZ()) {
+            throw new IllegalArgumentException("Min(z) must be greater than max z!");
+        }
+    }
+
+    public static void validateStreamArgs(final Vector3i min, final Vector3i max, final Vector3i existingMin, final Vector3i existingMax, final StreamOptions options) {
+        VolumeStreamUtils.validateStreamArgs(min, max, options);
+        if (existingMin.compareTo(Objects.requireNonNull(min, "Minimum coordinates cannot be null!")) < 0) {
+            throw new IllegalArgumentException(String.format("Minimum %s cannot be lower than the current minimum coordinates: %s", min, existingMin));
+        }
+        if (existingMax.compareTo(Objects.requireNonNull(max, "Minimum coordinates cannot be null!")) < 0) {
+            throw new IllegalArgumentException(String.format("Maximum %s cannot be greater than the current maximum coordinates: %s", max, existingMax));
+        }
+    }
+
     private interface TriFunction<A, B, C, Out> {
         Out apply(A a, B b, C c);
     }
@@ -124,7 +150,7 @@ public final class VolumeStreamUtils {
             pos.getZ() - (chunk.getPos().z << 4)));
     }
 
-    private static <T> Function<Chunk, Stream<Map.Entry<BlockPos, T>>> getElementByPosition(TriFunction<Chunk, ChunkSection, BlockPos, T> elementAccessor) {
+    private static <T> Function<Chunk, Stream<Map.Entry<BlockPos, T>>> getElementByPosition(final TriFunction<Chunk, ChunkSection, BlockPos, T> elementAccessor) {
         return chunk -> {
             final ChunkPos pos = chunk.getPos();
             return Arrays.stream(chunk.getSections()).flatMap(
@@ -144,7 +170,7 @@ public final class VolumeStreamUtils {
     }
 
     @SuppressWarnings({"unchecked"})
-    public static <R extends ReadableRegion<R>, API, MC, Section, KeyReference> VolumeStream<R, API> generateStream(
+    public static <R extends Volume, API, MC, Section, KeyReference> VolumeStream<R, API> generateStream(
         final Vector3i min,
         final Vector3i max,
         final StreamOptions options,

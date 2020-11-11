@@ -30,11 +30,17 @@ import org.spongepowered.api.world.biome.BiomeTypes;
 import org.spongepowered.api.world.schematic.Palette;
 import org.spongepowered.api.world.volume.biome.MutableBiomeVolume;
 import org.spongepowered.api.world.volume.stream.StreamOptions;
+import org.spongepowered.api.world.volume.stream.VolumeElement;
 import org.spongepowered.api.world.volume.stream.VolumeStream;
+import org.spongepowered.common.world.volume.SpongeVolumeStream;
+import org.spongepowered.common.world.volume.VolumeStreamUtils;
 import org.spongepowered.math.vector.Vector3i;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Mutable biome volume backed by a byte array.
@@ -95,8 +101,29 @@ public final class ByteArrayMutableBiomeBuffer extends AbstractBiomeBuffer imple
     }
 
     @Override
-    public VolumeStream<ByteArrayMutableBiomeBuffer, BiomeType> getBiomeStream(Vector3i min, Vector3i max, StreamOptions options
+    public VolumeStream<ByteArrayMutableBiomeBuffer, BiomeType> getBiomeStream(
+        final Vector3i min,
+        final Vector3i max,
+        final StreamOptions options
     ) {
-        return null;
+        final Vector3i blockMin = this.getBlockMin();
+        final Vector3i blockMax = this.getBlockMax();
+        VolumeStreamUtils.validateStreamArgs(min, max, blockMin, blockMax, options);
+        final byte[] biomes;
+        if (options.carbonCopy()) {
+            biomes = Arrays.copyOf(this.biomes, this.biomes.length);
+        } else {
+            biomes = this.biomes;
+        }
+        final Stream<VolumeElement<ByteArrayMutableBiomeBuffer, BiomeType>> stateStream = IntStream.range(blockMin.getX(), blockMax.getX() + 1)
+            .mapToObj(x -> IntStream.range(blockMin.getZ(), blockMax.getZ() + 1)
+                .mapToObj(z -> IntStream.range(blockMin.getY(), blockMax.getY() + 1)
+                    .mapToObj(y -> VolumeElement.of(this, () -> {
+                        final byte biomeId = biomes[this.getIndex(x, y, z)];
+                        return this.palette.get(biomeId & 255).orElseGet(BiomeTypes.OCEAN);
+                    }, new Vector3i(x, y, z)))
+                ).flatMap(Function.identity())
+            ).flatMap(Function.identity());
+        return new SpongeVolumeStream<>(stateStream, () -> this);
     }
 }
