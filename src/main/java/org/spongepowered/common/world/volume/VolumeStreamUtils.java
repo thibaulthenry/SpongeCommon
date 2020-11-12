@@ -145,21 +145,24 @@ public final class VolumeStreamUtils {
 
     private static TriFunction<Chunk, ChunkSection, BlockPos, BlockState> chunkSectionBlockStateGetter() {
         return ((chunk, chunkSection, pos) -> chunkSection.getBlockState(
-            pos.getX() - (chunk.getPos().x << 4),
-            pos.getY() - chunkSection.getYLocation(),
-            pos.getZ() - (chunk.getPos().z << 4)));
+            pos.getX() % 15,
+            pos.getY() % 15,
+            pos.getZ() % 15
+        ));
     }
 
     private static <T> Function<Chunk, Stream<Map.Entry<BlockPos, T>>> getElementByPosition(final TriFunction<Chunk, ChunkSection, BlockPos, T> elementAccessor) {
         return chunk -> {
             final ChunkPos pos = chunk.getPos();
-            return Arrays.stream(chunk.getSections()).flatMap(
+            return Arrays.stream(chunk.getSections())
+                .filter(Objects::nonNull)
+                .flatMap(
                 chunkSection -> IntStream.range(0, 16)
                     .mapToObj(z -> IntStream.range(0, 16)
                         .mapToObj(x -> IntStream.range(0, 16)
                             .mapToObj(y ->
                                 {
-                                    final BlockPos blockPos = new BlockPos(x + pos.x << 4, y + chunkSection.getYLocation(), z + pos.z << 4);
+                                    final BlockPos blockPos = new BlockPos(x + pos.x << 4, y + (chunkSection.getYLocation() >> 4), z + pos.z << 4);
                                     return new AbstractMap.SimpleEntry<>(blockPos, elementAccessor.apply(chunk, chunkSection, blockPos));
                                 }
                             )))

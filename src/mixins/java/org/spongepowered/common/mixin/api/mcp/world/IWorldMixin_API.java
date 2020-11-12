@@ -64,7 +64,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.common.accessor.entity.MobEntityAccessor;
 import org.spongepowered.common.entity.EntityUtil;
 import org.spongepowered.common.entity.projectile.UnknownProjectileSource;
-import org.spongepowered.common.event.tracking.IPhaseState;
 import org.spongepowered.common.event.tracking.PhaseContext;
 import org.spongepowered.common.event.tracking.PhaseTracker;
 import org.spongepowered.common.event.tracking.phase.plugin.PluginPhase;
@@ -278,17 +277,10 @@ public interface IWorldMixin_API<T extends ProtoWorld<T>> extends ProtoWorld<T> 
         final int x, final int y, final int z, final org.spongepowered.api.block.BlockState blockState, final BlockChangeFlag flag) {
         // TODO Minecraft 1.14 - PhaseTracker for gabizou
 
-        if (!this.containsBlock(x, y, z)) {
+        if (!World.isValid(new BlockPos(x, y, z))) {
             throw new PositionOutOfBoundsException(new Vector3i(x, y, z), Constants.World.BLOCK_MIN, Constants.World.BLOCK_MAX);
         }
-        final IPhaseState<?> state = PhaseTracker.getInstance().getCurrentState();
-        final boolean isWorldGen = state.isWorldGeneration();
-        final boolean handlesOwnCompletion = state.handlesOwnStateCompletion();
-        if (!isWorldGen) {
-            Preconditions.checkArgument(flag != null, "BlockChangeFlag cannot be null!");
-        }
-        try (final PhaseContext<?> context = isWorldGen || handlesOwnCompletion ? null
-                : PluginPhase.State.BLOCK_WORKER.createPhaseContext(PhaseTracker.SERVER)) {
+        try (final PhaseContext<?> context = PluginPhase.State.BLOCK_WORKER.switchIfNecessary(PhaseTracker.SERVER)) {
             if (context != null) {
                 context.buildAndSwitch();
             }

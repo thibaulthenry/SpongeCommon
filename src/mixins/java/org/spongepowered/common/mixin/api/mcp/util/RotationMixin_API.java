@@ -30,15 +30,16 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.common.SpongeCommon;
 
+import java.util.Locale;
+
 @Mixin(Rotation.class)
 public abstract class RotationMixin_API implements org.spongepowered.api.util.rotation.Rotation {
 
     //@formatter:off
     @Shadow public abstract Rotation shadow$add(Rotation rotation);
-    @Shadow(remap = false) public abstract String shadow$name();
     //@formatter:on
 
-    private final ResourceKey api$key = ResourceKey.of(SpongeCommon.getActivePlugin(), this.shadow$name());
+    private final ResourceKey api$key = ResourceKey.of(SpongeCommon.getActivePlugin(), ((Rotation) (Object) this).name().toLowerCase(Locale.ENGLISH));
 
     @SuppressWarnings("ConstantConditions")
     @Override

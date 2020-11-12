@@ -24,6 +24,7 @@
  */
 package org.spongepowered.common.world.volume;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.api.world.volume.MutableVolume;
 import org.spongepowered.api.world.volume.Volume;
 import org.spongepowered.api.world.volume.stream.VolumeCollector;
@@ -32,6 +33,9 @@ import org.spongepowered.api.world.volume.stream.VolumeElement;
 import org.spongepowered.api.world.volume.stream.VolumeMapper;
 import org.spongepowered.api.world.volume.stream.VolumePredicate;
 import org.spongepowered.api.world.volume.stream.VolumeStream;
+import org.spongepowered.common.event.tracking.PhaseContext;
+import org.spongepowered.common.event.tracking.PhaseTracker;
+import org.spongepowered.common.event.tracking.phase.plugin.PluginPhase;
 
 import java.util.Iterator;
 import java.util.Optional;
@@ -170,16 +174,19 @@ public class SpongeVolumeStream<V extends Volume, T> implements VolumeStream<V, 
 
     @Override
     public <W extends MutableVolume> void apply(final VolumeCollector<W, T, ?> collector) {
-        this.stream.forEach(element -> {
-            final W targetVolume = collector.target().get();
-            final VolumeElement<W, T> transformed = collector.positionTransform().apply(VolumeElement.of(
-                collector.target(),
-                element::getType,
-                element.getPosition()
-            ));
-            collector.applicator()
-                .apply(targetVolume, transformed);
-        });
+        try (final PhaseContext<@NonNull ?> context = PluginPhase.State.BLOCK_WORKER.createPhaseContext(PhaseTracker.SERVER)) {
+            context.buildAndSwitch();
+            this.stream.forEach(element -> {
+                final W targetVolume = collector.target().get();
+                final VolumeElement<W, T> transformed = collector.positionTransform().apply(VolumeElement.of(
+                    collector.target(),
+                    element::getType,
+                    element.getPosition()
+                ));
+                collector.applicator()
+                    .apply(targetVolume, transformed);
+            });
+        }
     }
 
     @Override

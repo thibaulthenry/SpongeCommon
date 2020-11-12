@@ -40,6 +40,7 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.gen.Heightmap;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.block.BlockState;
@@ -261,7 +262,12 @@ public interface IWorldReaderMixin_API<R extends ReadableRegion<R>> extends Read
         VolumeStreamUtils.validateStreamArgs(min, max, options);
 
         final boolean shouldCarbonCopy = options.carbonCopy();
-        final ArrayMutableBlockBuffer backingVolume = new ArrayMutableBlockBuffer(min, max);
+        final @MonotonicNonNull ArrayMutableBlockBuffer backingVolume;
+        if (shouldCarbonCopy) {
+            backingVolume = new ArrayMutableBlockBuffer(min, max);
+        } else {
+            backingVolume = null;
+        }
         return VolumeStreamUtils.<R, BlockState, net.minecraft.block.BlockState, Chunk, BlockPos>generateStream(
             min,
             max,
