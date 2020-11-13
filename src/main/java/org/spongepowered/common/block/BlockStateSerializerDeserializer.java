@@ -26,7 +26,11 @@ package org.spongepowered.common.block;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.mojang.brigadier.StringReader;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.block.Block;
+import net.minecraft.command.arguments.BlockStateArgument;
+import net.minecraft.command.arguments.BlockStateParser;
 import net.minecraft.state.IProperty;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
@@ -47,67 +51,16 @@ import java.util.stream.Collectors;
 
 public class BlockStateSerializerDeserializer {
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private static final Function<Map.Entry<IProperty<?>, Comparable<?>>, String> MAP_ENTRY_TO_STRING = p_apply_1_ -> {
-        if (p_apply_1_ == null) {
-            return "<NULL>";
-        } else {
-            final IProperty iproperty = p_apply_1_.getKey();
-            return iproperty.getName() + "=" + iproperty.getName(p_apply_1_.getValue());
-        }
-    };
-
     public static String serialize(final BlockState state) {
-        final StringBuilder stringbuilder = new StringBuilder();
-        stringbuilder.append(Registry.BLOCK.getKey((Block) state.getType()).toString());
-        if (!((net.minecraft.block.BlockState) state).getValues().isEmpty()) {
-            stringbuilder.append('[');
-            stringbuilder.append(
-                ((net.minecraft.block.BlockState) state).getValues()
-                    .entrySet()
-                    .stream()
-                    .map(BlockStateSerializerDeserializer.MAP_ENTRY_TO_STRING)
-                    .collect(Collectors.joining(","))
-            );
-            stringbuilder.append(']');
-        }
-
-        return stringbuilder.toString();
+        return BlockStateParser.toString((net.minecraft.block.BlockState) state);
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     public static Optional<BlockState> deserialize(final String string) {
         final String state = checkNotNull(string, "Id cannot be null!").toLowerCase(Locale.ENGLISH);
-        if (state.contains("[")) {
-            final String[] split = state.split("\\[");
-            final ResourceLocation key = ResourceLocation.tryCreate(split[0]);
-            return Registry.BLOCK.getValue(key)
-                .flatMap(block -> {
-                    final Collection<IProperty<?>> properties = block.getStateContainer().getProperties();
-                    final String propertyValues = split[1].replace("[", "").replace("]", "");
-                    if (properties.isEmpty()) {
-                        throw new IllegalArgumentException("The properties cannot be specified and empty (omit [] if there are no properties)");
-                    }
-                    final String[] propertyValuePairs = propertyValues.split(",");
-                    final List<? extends Tuple<? extends IProperty<?>, ?>> propertyValuesFound = Arrays.stream(propertyValuePairs)
-                        .map(propertyValue -> propertyValue.split("="))
-                        .filter(pair -> pair.length == 2)
-                        .map(pair -> Optional.ofNullable(block.getStateContainer().getProperty(pair[0]))
-                            .flatMap(property -> property.parseValue(pair[1]).map(value -> Tuple.of(property, value))))
-                        .filter(Optional::isPresent)
-                        .map(Optional::get)
-                        .collect(Collectors.toList());
-                    final BlockStateMatcher.Builder matcher = BlockState.matcher((BlockType) block);
-                    propertyValuesFound.forEach(tuple -> matcher.property((StateProperty) tuple.getFirst(), (Comparable) tuple.getSecond()));
-
-                    return matcher.build()
-                        .getCompatibleStates()
-                        .stream()
-                        .findFirst();
-                });
-
+        try {
+            return Optional.of((BlockState) BlockStateArgument.blockState().parse(new StringReader(state)).getState());
+        } catch (final CommandSyntaxException e) {
+            return Optional.empty();
         }
-        final ResourceLocation block = ResourceLocation.tryCreate(string);
-        return (Optional<BlockState>) (Optional) Registry.BLOCK.getValue(block).map(Block::getDefaultState);
     }
 }

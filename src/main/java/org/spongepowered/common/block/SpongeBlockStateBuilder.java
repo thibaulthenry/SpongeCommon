@@ -24,7 +24,9 @@
  */
 package org.spongepowered.common.block;
 
-import net.minecraft.command.arguments.BlockStateParser;
+import com.mojang.brigadier.StringReader;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import net.minecraft.command.arguments.BlockStateArgument;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.block.BlockTypes;
@@ -93,7 +95,8 @@ public class SpongeBlockStateBuilder extends AbstractDataBuilder<BlockState> imp
 
     @Override
     public BlockState.Builder fromString(final String id) {
-        this.blockState = this.parseString(id);
+        this.blockState = BlockStateSerializerDeserializer.deserialize(id)
+                .orElseThrow(() -> new IllegalArgumentException("The provided state is not valid."));
         return this;
     }
 
