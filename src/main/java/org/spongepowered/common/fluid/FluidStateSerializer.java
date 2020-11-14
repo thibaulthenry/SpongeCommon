@@ -75,41 +75,13 @@ public final class FluidStateSerializer {
         return stringbuilder.toString();
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     public static Optional<FluidState> deserialize(final String string) {
         final String state = Objects.requireNonNull(string, "Id cannot be null!").toLowerCase(Locale.ENGLISH);
-        if (state.contains("[")) {
-            final String[] split = state.split("\\[");
-            final ResourceLocation key = ResourceLocation.tryCreate(split[0]);
-            return Registry.FLUID.getValue(key)
-                    .flatMap(fluidType -> {
-                        final Collection<IProperty<?>> properties = fluidType.getStateContainer().getProperties();
-                        final String propertyValues = split[1].replace("[", "").replace("]", "");
-                        if (properties.isEmpty()) {
-                            throw new IllegalArgumentException("The properties cannot be specified and empty (omit [] if there are no properties)");
-                        }
-                        final String[] propertyValuePairs = propertyValues.split(",");
-                        final List<? extends Tuple<? extends IProperty<?>, ?>> propertyValuesFound = Arrays.stream(propertyValuePairs)
-                                .map(propertyValue -> propertyValue.split("="))
-                                .filter(pair -> pair.length == 2)
-                                .map(pair -> Optional.ofNullable(fluidType.getStateContainer().getProperty(pair[0]))
-                                        .flatMap(property -> property.parseValue(pair[1]).map(value -> Tuple.of(property, value))))
-                                .filter(Optional::isPresent)
-                                .map(Optional::get)
-                                .collect(Collectors.toList());
-                        final StateMatcher.Builder<@NonNull FluidState, @NonNull FluidType> matcher =
-                                StateMatcher.fluidStateMatcherBuilder().type((FluidType) fluidType);
-                        propertyValuesFound.forEach(tuple -> matcher.stateProperty((StateProperty) tuple.getFirst(), (Comparable) tuple.getSecond()));
-
-                        return matcher.build()
-                                .getCompatibleStates()
-                                .stream()
-                                .findFirst();
-                    });
-
+        try {
+            return Optional.of(new SpongeFluidStateBuilder().fromString(state).build());
+        } catch (final Exception ex) {
+            return Optional.empty();
         }
-        final ResourceLocation block = ResourceLocation.tryCreate(string);
-        return (Optional<FluidState>) (Optional) Registry.FLUID.getValue(block).map(Fluid::getDefaultState);
     }
 
 }

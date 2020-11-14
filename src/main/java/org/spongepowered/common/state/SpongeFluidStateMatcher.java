@@ -22,58 +22,45 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.block;
+package org.spongepowered.common.state;
 
 import net.minecraft.block.Block;
-import net.minecraft.state.IProperty;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import net.minecraft.state.IStateHolder;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.spongepowered.api.block.BlockState;
-import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.data.KeyValueMatcher;
 import org.spongepowered.api.data.persistence.DataContainer;
-import org.spongepowered.api.state.StateMatcher;
+import org.spongepowered.api.fluid.FluidState;
+import org.spongepowered.api.fluid.FluidType;
 import org.spongepowered.api.state.StateProperty;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
-public final class SpongeBlockStateMatcher implements StateMatcher<@NonNull BlockState> {
+public final class SpongeFluidStateMatcher extends AbstractStateMatcher<FluidState, FluidType> {
 
-    @MonotonicNonNull private List<BlockState> compatibleStates;
-
-    final BlockType type;
-    final Map<StateProperty<@NonNull ?>, Object> properties;
-    final Collection<KeyValueMatcher<?>> keyValueMatchers;
-    final Collection<StateProperty<@NonNull ?>> requiredProperties;
-
-    public SpongeBlockStateMatcher(final BlockType type,
+    public SpongeFluidStateMatcher(final FluidType type,
             final Collection<StateProperty<@NonNull ?>> requiredProperties,
             final HashMap<StateProperty<@NonNull ?>, Object> properties,
             final Collection<KeyValueMatcher<?>> keyValueMatchers) {
-        this.type = type;
-        this.requiredProperties = requiredProperties;
-        this.properties = properties;
-        this.keyValueMatchers = keyValueMatchers;
+        super(type, requiredProperties, properties, keyValueMatchers);
     }
 
     @Override
-    public boolean matches(@NonNull final BlockState state) {
-        return !this.getCompatibleStates().isEmpty();
+    public boolean matches(@NonNull final FluidState state) {
+        return this.isValid((IStateHolder<?>) state);
     }
 
     @Override
     @NonNull
-    public List<BlockState> getCompatibleStates() {
+    public List<FluidState> getCompatibleStates() {
         if (this.compatibleStates == null) {
             final Block blockType = (Block) this.type;
             this.compatibleStates = blockType.getStateContainer().getValidStates()
                     .stream()
                     .filter(this::isValid)
-                    .map(x -> (BlockState) x)
+                    .map(x -> (FluidState) x)
                     .collect(Collectors.toList());
         }
         return this.compatibleStates;
@@ -90,32 +77,6 @@ public final class SpongeBlockStateMatcher implements StateMatcher<@NonNull Bloc
         final DataContainer container = DataContainer.createNew();
         return container;
 
-    }
-
-    private boolean isValid(final net.minecraft.block.BlockState blockState) {
-        for (final Map.Entry<StateProperty<@NonNull ?>, Object> entry : this.properties.entrySet()) {
-            final IProperty<?> property = (IProperty<?>) entry.getKey();
-            if (!blockState.has(property) && !blockState.get(property).equals(entry.getValue())) {
-                return false;
-            }
-        }
-        for (final StateProperty<@NonNull ?> entry : this.requiredProperties) {
-            final IProperty<?> property = (IProperty<?>) entry;
-            if (!blockState.has(property)) {
-                return false;
-            }
-        }
-        final BlockState spongeBlockState = (BlockState) blockState;
-        for (final KeyValueMatcher<?> valueMatcher : this.keyValueMatchers) {
-            if (!this.matches(spongeBlockState, valueMatcher)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private <V> boolean matches(final BlockState blockState, final KeyValueMatcher<V> keyValueMatcher) {
-        return blockState.get(keyValueMatcher.getKey()).map(keyValueMatcher::matches).orElse(false);
     }
 
 }

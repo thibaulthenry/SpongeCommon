@@ -50,7 +50,7 @@ public class SpongeFluidStack implements FluidStack, SpongeMutableDataHolder {
     @Nullable private DataContainer extraData;
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    SpongeFluidStack(SpongeFluidStackBuilder builder) {
+    SpongeFluidStack(final SpongeFluidStackBuilder builder) {
         this.fluidType = builder.fluidType;
         this.volume = builder.volume;
         this.extraData = builder.extra == null ? null : builder.extra.copy();
@@ -59,7 +59,7 @@ public class SpongeFluidStack implements FluidStack, SpongeMutableDataHolder {
         }
     }
 
-    private SpongeFluidStack(FluidType fluidType, int volume, @Nullable DataContainer extraData) {
+    private SpongeFluidStack(final FluidType fluidType, final int volume, @Nullable final DataContainer extraData) {
         this.fluidType = fluidType;
         this.volume = volume;
         this.extraData = extraData == null ? null : extraData.copy();
@@ -76,7 +76,7 @@ public class SpongeFluidStack implements FluidStack, SpongeMutableDataHolder {
     }
 
     @Override
-    public FluidStack setVolume(int volume) {
+    public FluidStack setVolume(final int volume) {
         checkArgument(volume > 0, "Volume must be at least 0!");
         this.volume = volume;
         return this;
@@ -88,12 +88,12 @@ public class SpongeFluidStack implements FluidStack, SpongeMutableDataHolder {
     }
 
     @Override
-    public boolean validateRawData(DataView container) {
+    public boolean validateRawData(final DataView container) {
         return container.contains(Queries.CONTENT_VERSION, Constants.Fluids.FLUID_TYPE, Constants.Fluids.FLUID_VOLUME);
     }
 
     @Override
-    public void setRawData(DataView container) throws InvalidDataException {
+    public void setRawData(final DataView container) throws InvalidDataException {
         try {
             final int contentVersion = container.getInt(Queries.CONTENT_VERSION).get();
             if (contentVersion != this.getContentVersion()) {
@@ -110,7 +110,7 @@ public class SpongeFluidStack implements FluidStack, SpongeMutableDataHolder {
             if (container.contains(Constants.Sponge.UNSAFE_NBT)) {
                 this.extraData = container.getView(Constants.Sponge.UNSAFE_NBT).get().copy();
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new InvalidDataException("DataContainer contained invalid data!", e);
         }
     }
@@ -122,7 +122,7 @@ public class SpongeFluidStack implements FluidStack, SpongeMutableDataHolder {
 
     @Override
     public DataContainer toContainer() {
-        DataContainer container = DataContainer.createNew()
+        final DataContainer container = DataContainer.createNew()
             .set(Queries.CONTENT_VERSION, this.getContentVersion())
             .set(Constants.Fluids.FLUID_TYPE, this.fluidType.getKey().toString())
             .set(Constants.Fluids.FLUID_VOLUME, this.volume);

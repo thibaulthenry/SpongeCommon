@@ -58,20 +58,20 @@ public class SpongeFluidStackBuilder extends AbstractDataBuilder<FluidStack> imp
     }
 
     @Override
-    public FluidStack.Builder fluid(FluidType fluidType) {
+    public FluidStack.Builder fluid(final FluidType fluidType) {
         this.fluidType = checkNotNull(fluidType, "FluidType cannot be null!");
         return this;
     }
 
     @Override
-    public FluidStack.Builder volume(int volume) {
+    public FluidStack.Builder volume(final int volume) {
         checkArgument(volume > 0, "A FluidStack's volume has to be greater than zero!");
         this.volume = volume;
         return this;
     }
 
     @Override
-    public FluidStack.Builder from(FluidStackSnapshot fluidStackSnapshot) {
+    public FluidStack.Builder from(final FluidStackSnapshot fluidStackSnapshot) {
         checkArgument(fluidStackSnapshot instanceof SpongeFluidStackSnapshot, "Invalid implementation found of FluidStackSnapshot!");
         this.fluidType = fluidStackSnapshot.getFluid();
         this.volume = fluidStackSnapshot.getVolume();
@@ -90,7 +90,7 @@ public class SpongeFluidStackBuilder extends AbstractDataBuilder<FluidStack> imp
     }
 
     @Override
-    public FluidStack.Builder from(FluidStack value) {
+    public FluidStack.Builder from(final FluidStack value) {
         this.fluidType = value.getFluid();
         this.volume = value.getVolume();
         final DataContainer container = value.toContainer();
@@ -101,7 +101,7 @@ public class SpongeFluidStackBuilder extends AbstractDataBuilder<FluidStack> imp
     }
 
     @Override
-    protected Optional<FluidStack> buildContent(DataView container) throws InvalidDataException {
+    protected Optional<FluidStack> buildContent(final DataView container) throws InvalidDataException {
         if (!container.contains(Constants.Fluids.FLUID_TYPE, Constants.Fluids.FLUID_VOLUME)) {
             return Optional.empty();
         }
@@ -130,7 +130,7 @@ public class SpongeFluidStackBuilder extends AbstractDataBuilder<FluidStack> imp
     }
 
     @Override
-    public <V> FluidStack.Builder add(Key<? extends Value<V>> key, V value) {
+    public <V> FluidStack.Builder add(final Key<? extends Value<V>> key, final V value) {
         if (this.keyValues == null) {
             this.keyValues = new LinkedHashMap<>();
         }

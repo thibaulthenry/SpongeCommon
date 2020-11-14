@@ -57,22 +57,22 @@ public class SpongeFluidStackSnapshotBuilder extends AbstractDataBuilder<FluidSt
     }
 
     @Override
-    public FluidStackSnapshot.Builder fluid(FluidType fluidType) {
+    public FluidStackSnapshot.Builder fluid(final FluidType fluidType) {
         this.fluidType = checkNotNull(fluidType, "FluidType cannot be null!");
         return this;
     }
 
     @Override
-    public FluidStackSnapshot.Builder volume(int volume) {
+    public FluidStackSnapshot.Builder volume(final int volume) {
         this.volume = volume;
         return this;
     }
 
     @Override
-    public FluidStackSnapshot.Builder from(FluidStack fluidStack) {
+    public FluidStackSnapshot.Builder from(final FluidStack fluidStack) {
         this.fluidType = fluidStack.getFluid();
         this.volume = fluidStack.getVolume();
-        DataContainer datacontainer = fluidStack.toContainer();
+        final DataContainer datacontainer = fluidStack.toContainer();
         this.container = null;
         if (datacontainer.contains(Constants.Sponge.UNSAFE_NBT)) {
             this.container = datacontainer.getView(Constants.Sponge.UNSAFE_NBT).get();
@@ -81,7 +81,7 @@ public class SpongeFluidStackSnapshotBuilder extends AbstractDataBuilder<FluidSt
     }
 
     @Override
-    public FluidStackSnapshot.Builder from(FluidStackSnapshot holder) {
+    public FluidStackSnapshot.Builder from(final FluidStackSnapshot holder) {
         checkNotNull(holder, "FluidStackSnapshot cannot be null!");
         this.fluidType = checkNotNull(holder.getFluid(), "Invalid FluidStackSnapshot! FluidType cannot be null!");
         return null;
@@ -92,7 +92,7 @@ public class SpongeFluidStackSnapshotBuilder extends AbstractDataBuilder<FluidSt
     public FluidStackSnapshot build() {
         checkState(this.fluidType != null, "FluidType cannot be null!");
         checkState(this.volume >= 0, "The fluid volume must be at least 0!");
-        SpongeFluidStackSnapshot snapshot = new SpongeFluidStackSnapshot(this);
+        final SpongeFluidStackSnapshot snapshot = new SpongeFluidStackSnapshot(this);
         if (this.keyValues != null) {
             final FluidStack stack = snapshot.createStack();
             this.keyValues.forEach((k, v) -> stack.offer((Key) k, v));
@@ -102,7 +102,7 @@ public class SpongeFluidStackSnapshotBuilder extends AbstractDataBuilder<FluidSt
     }
 
     @Override
-    protected Optional<FluidStackSnapshot> buildContent(DataView container) throws InvalidDataException {
+    protected Optional<FluidStackSnapshot> buildContent(final DataView container) throws InvalidDataException {
         try {
             if (container.contains(Constants.Fluids.FLUID_TYPE, Constants.Fluids.FLUID_VOLUME)) {
                 final String fluidId = container.getString(Constants.Fluids.FLUID_TYPE).get();
@@ -112,7 +112,7 @@ public class SpongeFluidStackSnapshotBuilder extends AbstractDataBuilder<FluidSt
                 }
                 final FluidType fluidType = type.get();
                 final int volume = container.getInt(Constants.Fluids.FLUID_VOLUME).get();
-                SpongeFluidStackSnapshotBuilder builder = new SpongeFluidStackSnapshotBuilder();
+                final SpongeFluidStackSnapshotBuilder builder = new SpongeFluidStackSnapshotBuilder();
                 builder.fluid(fluidType)
                         .volume(volume);
                 if (container.contains(Constants.Sponge.UNSAFE_NBT)) {
@@ -120,7 +120,7 @@ public class SpongeFluidStackSnapshotBuilder extends AbstractDataBuilder<FluidSt
                 }
                 return Optional.of(builder.build());
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new InvalidDataException("Something went wrong deserializing.", e);
         }
         return Optional.empty();
@@ -135,7 +135,7 @@ public class SpongeFluidStackSnapshotBuilder extends AbstractDataBuilder<FluidSt
     }
 
     @Override
-    public <V> FluidStackSnapshot.Builder add(Key<? extends Value<V>> key, V value) {
+    public <V> FluidStackSnapshot.Builder add(final Key<? extends Value<V>> key, final V value) {
         if (this.keyValues == null) {
             this.keyValues = new LinkedHashMap<>();
         }

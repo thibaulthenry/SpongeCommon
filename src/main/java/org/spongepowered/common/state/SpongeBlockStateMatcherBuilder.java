@@ -22,55 +22,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.block;
+package org.spongepowered.common.state;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
-import org.spongepowered.api.data.KeyValueMatcher;
 import org.spongepowered.api.data.persistence.DataView;
 import org.spongepowered.api.data.persistence.InvalidDataException;
 import org.spongepowered.api.state.StateMatcher;
-import org.spongepowered.api.state.StateProperty;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
-public final class SpongeBlockStateMatcherBuilder implements StateMatcher.Builder<@NonNull BlockState, @NonNull BlockType> {
-
-    @Nullable private BlockType type;
-    private final Collection<StateProperty<@NonNull ?>> requiredProperties = new ArrayList<>();
-    private final Map<StateProperty<@NonNull ?>, Object> properties = new HashMap<>();
-    private final Collection<KeyValueMatcher<?>> keyValueMatchers = new ArrayList<>();
-
-    @Override
-    public StateMatcher.@NonNull Builder<@NonNull BlockState, @NonNull BlockType> type(@NonNull final BlockType type) {
-        this.type = type;
-        return this;
-    }
-
-    @Override
-    public StateMatcher.@NonNull Builder<@NonNull BlockState, @NonNull BlockType> supportsStateProperty(@NonNull final StateProperty<@NonNull ?> stateProperty) {
-        this.requiredProperties.add(stateProperty);
-        return this;
-    }
-
-    @Override
-    public <V extends Comparable<V>> StateMatcher.@NonNull Builder<@NonNull BlockState, @NonNull BlockType> stateProperty(
-            @NonNull final StateProperty<@NonNull V> stateProperty, @NonNull final V value) {
-        this.properties.put(stateProperty, value);
-        return this;
-    }
-
-    @Override
-    public StateMatcher.@NonNull Builder<@NonNull BlockState, @NonNull BlockType> matcher(@NonNull final KeyValueMatcher<?> matcher) {
-
-        return null;
-    }
+public final class SpongeBlockStateMatcherBuilder extends AbstractStateMatcherBuilder<@NonNull BlockState, @NonNull BlockType> {
 
     @Override
     @NonNull
@@ -90,21 +55,11 @@ public final class SpongeBlockStateMatcherBuilder implements StateMatcher.Builde
     }
 
     @Override
-    public StateMatcher.@NonNull Builder<@NonNull BlockState, @NonNull BlockType> reset() {
-        this.type = null;
-        this.properties.clear();
-        return this;
-    }
-
-    @Override
     public StateMatcher.Builder<@NonNull BlockState, @NonNull BlockType> from(@NonNull final StateMatcher<@NonNull BlockState> value) {
         if (!(value instanceof SpongeBlockStateMatcher)) {
             throw new IllegalArgumentException("BlockStateMatcher must be a SpongeBlockStateMatcher");
         }
-        this.type = ((SpongeBlockStateMatcher) value).type;
-        this.properties.clear();
-        this.properties.putAll(((SpongeBlockStateMatcher) value).properties);
-        return this;
+        return super.from(value);
     }
 
 }
