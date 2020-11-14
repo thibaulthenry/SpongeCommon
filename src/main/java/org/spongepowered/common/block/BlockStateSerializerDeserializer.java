@@ -28,26 +28,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.block.Block;
 import net.minecraft.command.arguments.BlockStateArgument;
 import net.minecraft.command.arguments.BlockStateParser;
-import net.minecraft.state.IProperty;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.registry.Registry;
 import org.spongepowered.api.block.BlockState;
-import org.spongepowered.api.block.BlockStateMatcher;
-import org.spongepowered.api.block.BlockType;
-import org.spongepowered.api.state.StateProperty;
-import org.spongepowered.api.util.Tuple;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class BlockStateSerializerDeserializer {
 

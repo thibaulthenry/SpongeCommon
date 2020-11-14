@@ -1275,6 +1275,7 @@ public final class Constants {
         public static final DataQuery BLOCK_EXTENDED_STATE = of("BlockExtendedState");
         public static final DataQuery BLOCK_TYPE = of("BlockType");
         public static final DataQuery BLOCK_STATE_UNSAFE_META = of("UnsafeMeta");
+        public static final DataQuery BLOCK_STATE_MATCHER = of("BlockStateMatcher");
         public static final int PIXELS_PER_BLOCK = 16;
     }
 
