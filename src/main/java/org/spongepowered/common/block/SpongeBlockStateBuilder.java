@@ -24,9 +24,7 @@
  */
 package org.spongepowered.common.block;
 
-import com.mojang.brigadier.StringReader;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.command.arguments.BlockStateArgument;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.block.BlockTypes;
@@ -41,7 +39,7 @@ import org.spongepowered.common.util.Constants;
 import java.util.Objects;
 import java.util.Optional;
 
-public class SpongeBlockStateBuilder extends AbstractDataBuilder<BlockState> implements BlockState.Builder {
+public class SpongeBlockStateBuilder extends AbstractDataBuilder<@NonNull BlockState> implements BlockState.Builder {
 
     private BlockState blockState = BlockTypes.STONE.get().getDefaultState();
 
@@ -50,37 +48,41 @@ public class SpongeBlockStateBuilder extends AbstractDataBuilder<BlockState> imp
     }
 
     @Override
-    public BlockState.Builder blockType(final BlockType blockType) {
+    public BlockState.@NonNull Builder blockType(@NonNull final BlockType blockType) {
         this.blockState = Objects.requireNonNull(blockType).getDefaultState();
         return this;
     }
 
-
     @Override
-    public <V> SpongeBlockStateBuilder add(final Key<? extends Value<V>> key, final V value) {
+    @NonNull
+    public <V> SpongeBlockStateBuilder add(@NonNull final Key<@NonNull ? extends Value<V>> key, @NonNull final V value) {
         Objects.requireNonNull(key, "key");
         this.blockState = this.blockState.with(key, value).orElse(this.blockState);
         return this;
     }
 
     @Override
-    public SpongeBlockStateBuilder from(final BlockState holder) {
+    @NonNull
+    public SpongeBlockStateBuilder from(@NonNull final BlockState holder) {
         this.blockState = holder;
         return this;
     }
 
     @Override
+    @NonNull
     public SpongeBlockStateBuilder reset() {
         this.blockState = BlockTypes.STONE.get().getDefaultState();
         return this;
     }
 
     @Override
+    @NonNull
     public BlockState build() {
         return this.blockState;
     }
 
     @Override
+    @NonNull
     protected Optional<BlockState> buildContent(final DataView container) throws InvalidDataException {
         if (!container.contains(Constants.Block.BLOCK_STATE)) {
             return Optional.empty();
@@ -94,7 +96,7 @@ public class SpongeBlockStateBuilder extends AbstractDataBuilder<BlockState> imp
     }
 
     @Override
-    public BlockState.Builder fromString(final String id) {
+    public BlockState.@NonNull Builder fromString(@NonNull final String id) {
         this.blockState = BlockStateSerializerDeserializer.deserialize(id)
                 .orElseThrow(() -> new IllegalArgumentException("The provided state is not valid."));
         return this;

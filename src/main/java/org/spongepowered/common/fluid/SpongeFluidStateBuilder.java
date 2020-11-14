@@ -36,6 +36,7 @@ import net.minecraft.state.IProperty;
 import net.minecraft.state.StateContainer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.api.data.Key;
 import org.spongepowered.api.data.persistence.DataView;
 import org.spongepowered.api.data.persistence.InvalidDataException;
@@ -48,24 +49,24 @@ import org.spongepowered.common.util.Constants;
 import java.util.Objects;
 import java.util.Optional;
 
-public class SpongeFluidStateBuilder implements FluidState.Builder {
+public final class SpongeFluidStateBuilder implements FluidState.Builder {
 
     private FluidState state = FluidTypes.EMPTY.get().getDefaultState();
 
     @Override
-    public FluidState.Builder fluid(final FluidType fluidType) {
+    public FluidState.@NonNull Builder fluid(@NonNull final FluidType fluidType) {
         this.state = Objects.requireNonNull(fluidType).getDefaultState();
         return this;
     }
 
     @Override
-    public FluidState.Builder fromString(final String id) {
+    public FluidState.@NonNull Builder fromString(@NonNull final String id) {
         this.state = this.parseString(id);
         return this;
     }
 
     @Override
-    public <V> FluidState.Builder add(final Key<? extends Value<V>> key, final V value) {
+    public <V> FluidState.@NonNull Builder add(@NonNull final Key<@NonNull ? extends Value<V>> key, @NonNull final V value) {
         Objects.requireNonNull(this.state, "The fluid type must be set first");
         Objects.requireNonNull(key, "The key must not be null");
         Objects.requireNonNull(key, "The value must not be null");
@@ -74,25 +75,27 @@ public class SpongeFluidStateBuilder implements FluidState.Builder {
     }
 
     @Override
-    public FluidState.Builder from(final FluidState holder) {
+    public FluidState.@NonNull Builder from(@NonNull final FluidState holder) {
         this.state = holder;
         return this;
     }
 
     @Override
+    @NonNull
     public FluidState build() {
         Objects.requireNonNull(this.state, "There must be a FluidType specified.");
         return this.state;
     }
 
     @Override
-    public FluidState.Builder reset() {
+    public FluidState.@NonNull Builder reset() {
         this.state = null;
         return this;
     }
 
     @Override
-    public Optional<FluidState> build(final DataView container) throws InvalidDataException {
+    @NonNull
+    public Optional<FluidState> build(@NonNull final DataView container) throws InvalidDataException {
         if (!container.contains(Constants.Fluids.FLUID_STATE)) {
             return Optional.empty();
         }

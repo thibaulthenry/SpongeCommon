@@ -26,6 +26,7 @@ package org.spongepowered.common.fluid;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.Key;
@@ -66,6 +67,7 @@ public class SpongeFluidStack implements FluidStack, SpongeMutableDataHolder {
     }
 
     @Override
+    @NonNull
     public FluidType getFluid() {
         return this.fluidType;
     }
@@ -76,13 +78,17 @@ public class SpongeFluidStack implements FluidStack, SpongeMutableDataHolder {
     }
 
     @Override
+    @NonNull
     public FluidStack setVolume(final int volume) {
-        checkArgument(volume > 0, "Volume must be at least 0!");
+        if (volume <= 0) {
+            throw new IllegalArgumentException("Volume must be at least 0!");
+        }
         this.volume = volume;
         return this;
     }
 
     @Override
+    @NonNull
     public FluidStackSnapshot createSnapshot() {
         return new SpongeFluidStackSnapshotBuilder().from(this).build();
     }
@@ -93,7 +99,7 @@ public class SpongeFluidStack implements FluidStack, SpongeMutableDataHolder {
     }
 
     @Override
-    public void setRawData(final DataView container) throws InvalidDataException {
+    public void setRawData(@NonNull final DataView container) throws InvalidDataException {
         try {
             final int contentVersion = container.getInt(Queries.CONTENT_VERSION).get();
             if (contentVersion != this.getContentVersion()) {
@@ -121,6 +127,7 @@ public class SpongeFluidStack implements FluidStack, SpongeMutableDataHolder {
     }
 
     @Override
+    @NonNull
     public DataContainer toContainer() {
         final DataContainer container = DataContainer.createNew()
             .set(Queries.CONTENT_VERSION, this.getContentVersion())
